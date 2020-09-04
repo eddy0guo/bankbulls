@@ -6,38 +6,6 @@ banker bull log
 using namespace eosio;
 using namespace std;
 
-
-/*
- *
- * JSON串规范：字段都是表中字段
-
-
-6.本局结算完成
-{
- 	"event_id":"gameSettlementFinish",
-"game_id":1233,
-"state":5
-}
-
-7.本轮结算中
-{
- 	"event_id":"roundSettlementing",
-"round_id":1233,
-}
-
-8.本轮结算完成
-{
- 	"event_id":"roundSettlementingFinish",
-"round_id":1233,
-"banker_payout_total":600
-}
-
-9.下轮开始
-{
- 	"event_id":"roundBegin",
-"round_id":1234
-}
- * */
 /**
  *
  * 1.游戏开局
@@ -96,7 +64,7 @@ std::string game_start_json(uint64_t game_id, uint32_t state, uint32_t stop_at, 
 }
  * */
 std::string new_bet_json(uint64_t game_id, string player, string spades_amt, string hearts_amt,
-                            string clubs_amt, string diamonds_amt, uint32_t created_at) {
+                         string clubs_amt, string diamonds_amt, uint32_t created_at) {
     nlohmann::json tmp_json;
     tmp_json["event_id"] = "newBet";
     tmp_json["game_id"] = game_id;
@@ -108,6 +76,7 @@ std::string new_bet_json(uint64_t game_id, string player, string spades_amt, str
     tmp_json["created_at"] = created_at;
     return tmp_json.dump();
 }
+
 /**
 3.停止下注
 {
@@ -117,7 +86,7 @@ std::string new_bet_json(uint64_t game_id, string player, string spades_amt, str
 }
  **/
 
-std::string stop_bet_json(uint64_t game_id,uint32_t state) {
+std::string stop_bet_json(uint64_t game_id, uint32_t state) {
     nlohmann::json tmp_json;
     tmp_json["event_id"] = "gameStop";
     tmp_json["game_id"] = game_id;
@@ -151,16 +120,17 @@ std::string stop_bet_json(uint64_t game_id,uint32_t state) {
  * */
 
 
-std::string game_result_json(uint64_t game_id,uint32_t state,string seed,string wash_hash,
-                             uint32_t block_index,string block_hash,string dealer_card,
-                             string spades_card,string hearts_card, string clubs_card,
-                             string diamonds_card ) {
+std::string game_result_json(uint64_t game_id, uint32_t state, string seed, string wash_hash,
+                             uint32_t block_index, string block_hash, string dealer_card,
+                             string spades_card, string hearts_card, string clubs_card,
+                             string diamonds_card) {
     nlohmann::json tmp_json;
     //todo::这里eosio内存分配异常，先带上下标1
-    tmp_json["event_id1"] = "gameResult";
-    tmp_json["game_id1"] = game_id;
-    tmp_json["state1"] = state;
-    tmp_json["seed"] = seed;tmp_json["wash_hash"] = wash_hash;
+    tmp_json["event_id"] = "gameResult";
+    tmp_json["game_id"] = game_id;
+    tmp_json["state"] = state;
+    tmp_json["seed"] = seed;
+    tmp_json["wash_hash"] = wash_hash;
     tmp_json["block_index"] = block_index;
     tmp_json["block_hash"] = block_hash;
     tmp_json["dealer_card"] = dealer_card;
@@ -182,14 +152,14 @@ std::string game_result_json(uint64_t game_id,uint32_t state,string seed,string 
 }
 **/
 //todo：所有类型都在log.hpp里转
-std::string player_winners_json(name player,asset win_amt) {
+std::string player_winners_json(name player, asset win_amt) {
     nlohmann::json tmp_json;
     tmp_json["player"] = player.to_string();
     tmp_json["win_amt"] = win_amt.to_string();
     return tmp_json.dump();
 }
 
-std::string game_settlement_json(uint64_t game_id,uint32_t state,asset banker_payout,vector<string> winners) {
+std::string game_settlement_json(uint64_t game_id, uint32_t state, asset banker_payout, vector<string> winners) {
     nlohmann::json tmp_json;
     tmp_json["event_id"] = "gameSettlement";
     tmp_json["game_id"] = game_id;
@@ -197,5 +167,111 @@ std::string game_settlement_json(uint64_t game_id,uint32_t state,asset banker_pa
     tmp_json["banker_payout"] = banker_payout.to_string();
     //todo:array 不是数组
     tmp_json["winners"] = winners;
+    return tmp_json.dump();
+}
+
+
+/**
+ * 6.流局处理
+说明：游戏流局处理，退还本金
+{
+    "event_id":"gameCancel",
+"game_id":1233,
+"state":6
+}
+7.轮次流局处理
+说明：轮次流局处理，立即进行轮次结算与轮次开始
+{
+    "event_id":"roundCancel",
+"game_id":1233,
+"state":6
+}*
+ * **/
+std::string game_cancel_json(uint64_t game_id, uint32_t state) {
+    nlohmann::json tmp_json;
+    tmp_json["event_id"] = "gameCancel";
+    tmp_json["game_id"] = game_id;
+    tmp_json["state"] = state;
+    return tmp_json.dump();
+}
+
+std::string round_cancel_json(uint64_t game_id, uint32_t state) {
+    nlohmann::json tmp_json;
+    tmp_json["event_id"] = "roundCancel";
+    tmp_json["game_id"] = game_id;
+    tmp_json["state"] = state;
+    return tmp_json.dump();
+}
+
+/**
+2.本轮结算完成
+x为当前游戏状态值
+{
+"event_id":"roundSettlementFinish",
+"round_id":1233,
+"state":x
+}**/
+
+std::string round_slt_finish_json(uint64_t round_id, uint32_t state) {
+    nlohmann::json tmp_json;
+    tmp_json["event_id"] = "roundSettlementFinish";
+    tmp_json["round_id"] = round_id;
+    tmp_json["state"] = state;
+    return tmp_json.dump();
+}
+
+/*
+ * x为当前游戏状态值
+{
+ 	"event_id":"roundBegin",
+"round_id":1234,
+"state":x
+}
+ * */
+
+std::string round_begin_json(uint64_t round_id, uint32_t state) {
+    nlohmann::json tmp_json;
+    tmp_json["event_id"] = "roundBegin";
+    tmp_json["round_id"] = round_id;
+    tmp_json["state"] = state;
+    return tmp_json.dump();
+}
+
+/*
+ * 9.本轮结算派彩
+x为当前游戏状态值
+{
+ 	"event_id":"roundSettlementPayout",
+"round_id":1233,
+"banker_payout_total":600,
+"state":x
+}
+ * **/
+std::string round_slt_payout_json(uint64_t round_id, asset banker_payout_total, uint32_t state) {
+    nlohmann::json tmp_json;
+    tmp_json["event_id"] = "roundSettlementPayout";
+    tmp_json["round_id"] = round_id;
+    tmp_json["banker_payout_total"] = banker_payout_total.to_string();
+    tmp_json["state"] = state;
+    return tmp_json.dump();
+}
+
+/**
+11.限红更新
+说明：游戏开局后，才会有该事件
+        x为当前游戏状态值
+        {
+                "event_id":"gameLimit",
+        "game_id":1233,
+        "cur_max_bet":600,
+        "state":x
+        }
+ **/
+std::string game_limit_json(uint64_t round_id, int64_t cur_max_bet, uint32_t state) {
+    nlohmann::json tmp_json;
+    tmp_json["event_id"] = "gameLimit";
+    tmp_json["round_id"] = round_id;
+    tmp_json["cur_max_bet"] = cur_max_bet;
+    tmp_json["state"] = state;
     return tmp_json.dump();
 }

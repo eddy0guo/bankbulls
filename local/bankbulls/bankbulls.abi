@@ -54,6 +54,26 @@
             ]
         },
         {
+            "name": "cancelgame",
+            "base": "",
+            "fields": []
+        },
+        {
+            "name": "cancelround",
+            "base": "",
+            "fields": []
+        },
+        {
+            "name": "canceltrx",
+            "base": "",
+            "fields": [
+                {
+                    "name": "player",
+                    "type": "name"
+                }
+            ]
+        },
+        {
             "name": "cur_round",
             "base": "",
             "fields": [
@@ -144,6 +164,11 @@
             ]
         },
         {
+            "name": "delayclear",
+            "base": "",
+            "fields": []
+        },
+        {
             "name": "delstate",
             "base": "",
             "fields": [
@@ -163,6 +188,10 @@
                 },
                 {
                     "name": "sign",
+                    "type": "string"
+                },
+                {
+                    "name": "public_key",
                     "type": "string"
                 },
                 {
@@ -236,44 +265,14 @@
                 {
                     "name": "wash_hash",
                     "type": "string"
-                }
-            ]
-        },
-        {
-            "name": "game_records",
-            "base": "",
-            "fields": [
-                {
-                    "name": "id",
-                    "type": "uint64"
                 },
                 {
-                    "name": "player",
-                    "type": "name"
-                },
-                {
-                    "name": "user_gestures",
+                    "name": "start_txid",
                     "type": "string"
                 },
                 {
-                    "name": "eos_gestures",
+                    "name": "open_txid",
                     "type": "string"
-                },
-                {
-                    "name": "asset_name",
-                    "type": "string"
-                },
-                {
-                    "name": "asset_amount",
-                    "type": "uint64"
-                },
-                {
-                    "name": "result",
-                    "type": "int32"
-                },
-                {
-                    "name": "playTime",
-                    "type": "uint64"
                 }
             ]
         },
@@ -297,11 +296,11 @@
             "fields": [
                 {
                     "name": "key",
-                    "type": "uint64"
+                    "type": "name"
                 },
                 {
                     "name": "value",
-                    "type": "int32"
+                    "type": "string"
                 }
             ]
         },
@@ -401,28 +400,6 @@
                 },
                 {
                     "name": "block_hash",
-                    "type": "string"
-                }
-            ]
-        },
-        {
-            "name": "playeos",
-            "base": "",
-            "fields": [
-                {
-                    "name": "user",
-                    "type": "name"
-                },
-                {
-                    "name": "to",
-                    "type": "name"
-                },
-                {
-                    "name": "quantity",
-                    "type": "asset"
-                },
-                {
-                    "name": "memo",
                     "type": "string"
                 }
             ]
@@ -657,7 +634,7 @@
                 },
                 {
                     "name": "value",
-                    "type": "uint32"
+                    "type": "string"
                 }
             ]
         },
@@ -700,6 +677,10 @@
                 {
                     "name": "sign",
                     "type": "string"
+                },
+                {
+                    "name": "pubkey",
+                    "type": "string"
                 }
             ]
         },
@@ -730,6 +711,21 @@
         },
         {
             "name": "testdelaya",
+            "base": "",
+            "fields": []
+        },
+        {
+            "name": "testdelayb",
+            "base": "",
+            "fields": [
+                {
+                    "name": "count",
+                    "type": "int64"
+                }
+            ]
+        },
+        {
+            "name": "testdelayc",
             "base": "",
             "fields": []
         },
@@ -786,11 +782,39 @@
                 {
                     "name": "start_round_id",
                     "type": "uint64"
+                },
+                {
+                    "name": "state",
+                    "type": "uint32"
+                },
+                {
+                    "name": "res_amt",
+                    "type": "asset"
                 }
             ]
         }
     ],
     "actions": [
+        {
+            "name": "cancelgame",
+            "type": "cancelgame",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "cancelround",
+            "type": "cancelround",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "canceltrx",
+            "type": "canceltrx",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "delayclear",
+            "type": "delayclear",
+            "ricardian_contract": ""
+        },
         {
             "name": "delstate",
             "type": "delstate",
@@ -804,11 +828,6 @@
         {
             "name": "opencards",
             "type": "opencards",
-            "ricardian_contract": ""
-        },
-        {
-            "name": "playeos",
-            "type": "playeos",
             "ricardian_contract": ""
         },
         {
@@ -872,6 +891,16 @@
             "ricardian_contract": ""
         },
         {
+            "name": "testdelayb",
+            "type": "testdelayb",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "testdelayc",
+            "type": "testdelayc",
+            "ricardian_contract": ""
+        },
+        {
             "name": "testsign",
             "type": "testsign",
             "ricardian_contract": ""
@@ -879,14 +908,7 @@
     ],
     "tables": [
         {
-            "name": "bankbulls",
-            "type": "game_records",
-            "index_type": "i64",
-            "key_names": [],
-            "key_types": []
-        },
-        {
-            "name": "bets",
+            "name": "bets2",
             "type": "bets",
             "index_type": "i64",
             "key_names": [],
@@ -907,7 +929,7 @@
             "key_types": []
         },
         {
-            "name": "globalstate",
+            "name": "globalstate3",
             "type": "global_state",
             "index_type": "i64",
             "key_names": [],

@@ -1,42 +1,67 @@
-/*
-自定义的相关数据类型、宏等
-所有的数值计算都按照整数进行
-*/
+#pragma once
+
 #include "nlohmann/json.hpp"
+#include<tuple>
+#include "bankbulls.hpp"
+
 
 using namespace eosio;
 using namespace std;
 
 #define EOS_SYMBOL symbol(symbol_code("EOS"),4)
 #define DEFAULT_ASSET asset(0, EOS_SYMBOL)
-
-// asset(amt,EOS_SYMBOL)
-
 #define FINGER_SYMBOL symbol(symbol_code("FINGER"),4)
+
+//table name
+#define LOGS2_TABLE_NAME  "logs2"
+#define LOGS_TABLE_NAME  "logs"
+#define HIS_ROUNDS_TABLE_NAME  "hisrounds"
+#define CUR_ROUND_TABLE_NAME  "curround"
+#define RES_BANKERS_TABLE_NAME  "resbankers"
+#define UP_BANKERS_TABLE_NAME  "upbankers"
+#define BETS2_TABLE_NAME  "bets2"
+#define GAMES_TABLE_NAME  "games"
+#define SETTINGS_TABLE_NAME "globalstate3"
+
+//keyname
+#define TIME_STOP_KEY_NAME "timestop"
+#define TIME_GAME_KEY_NAME "timegame"
+#define TIME_ROUND_KEY_NAME "timeround"
+#define MIN_UP_BANK_KEY_NAME "minupbank"
+#define MIN_DOWN_BANK_KEY_NAME "mindownbank"
+#define LIMIT_PLAY_BANK_KEY_NAME "limitplybank"
+#define LIMIT_SYSTEM_BANK_KEY_NAME "limitsysbank"
+#define SIZE_GAMES_KEY_NAME "sizegames"
+#define SIZE_ROUNDS_KEY_NAME "sizerounds"
+#define LAST_LOGS2_ID_KEY_NAME "lastlogs2id"
+//fixme:放进设置项还没给join说
+#define MIN_INCREASE_KEY_NAME "minplusbank"
+#define MIN_REDUCE_KEY_NAME "minminusbank"
+
 //组合type,组合名称,最大点数，最大点数对应的花色，赔率，
-#define ALLOCATION_INFO std::tuple<uint32_t, string, uint32_t, uint32_t,uint32_t>
-#define BET_RESULT std::tuple<int32_t, string>
+typedef std::tuple<uint32_t, string, uint32_t, uint32_t, uint32_t> ALLOCATION_INFO;
+typedef std::tuple<int32_t, string> BET_RESULT;
 
-const string spades_icon = "♠";
-const string hearts_icon = "♥";
-const string clubs_icon = "♣";
-const string diamonds_icon = "♦";
+//SID = sender id
+const uint128_t TRANSFER_SID = name("eosio.token").value + name("transfer").value; //2294284288
+const uint128_t SLT_ROUND_SID = name("sltround").value; //1761607680
+const uint128_t SLT_GAME_SID = name("sltgame").value; //1073741824
+const uint128_t START_ROUND_SID = name("startround").value; //1701167104
+const uint128_t STOP_BET_SID = name("stopbet").value; //536870912
 
 
-//todo：map key设计规则
-const map<string, int> STATE_KEY = {
-        {"max_amount", 100001},
-        {"mix_amount", 100002},
-        {"max_time",   100003}
-};
+const string SPADES_ICON = "♠";
+const string HEARTS_ICON = "♥";
+const string CLUBS_ICON = "♣";
+const string DIAMONDS_ICON = "♦";
 
-const map <uint32_t, string> CARD_TYPE_ICON = {
+const map<uint32_t, string> CARD_TYPE_ICON = {
         {3, "♠"},
         {2, "♥"},
         {1, "♣"},
         {0, "♦"}
 };
-const map <uint32_t, string> CARD_NUMBER_ICON = {
+const map<uint32_t, string> CARD_NUMBER_ICON = {
         {13, "K"},
         {12, "Q"},
         {11, "J"},
@@ -52,28 +77,14 @@ const map <uint32_t, string> CARD_NUMBER_ICON = {
         {1,  "A"}
 };
 
-// 服务公钥是不是写在表中动态管理更好？
-//eddytest1111
-//const string SERVICE_PUBKEY = "EOS6XqJGhrmewL3Uwa2cM1NdEBJhQqGEQyEFZmP2KnSgDvTJ3966c";
+// const string SERVICE_PUBKEY = "EOS67sxYKu379Q9QLb3ERgza8oCN21Z3Rr3FDFii1gzj8iDGifxE7";
+//const asset PLAYER_BANKER_MAX_BET_AMOUNT = asset(1000 * 10000, EOS_SYMBOL);
+//const asset SYSTEM_BANKER_MAX_BET_AMOUNT = asset(1000 * 10000, EOS_SYMBOL); //系统上庄最大投注额
+//const asset CUR_MAX_BET = asset(1000 * 10000, EOS_SYMBOL);                //单人投注最大额
 
-const string SERVICE_PUBKEY = "EOS67sxYKu379Q9QLb3ERgza8oCN21Z3Rr3FDFii1gzj8iDGifxE7";
-const asset PLAYER_BANKER_MAX_BET_AMOUNT = asset(1000 * 10000, EOS_SYMBOL);
-const asset SYSTEM_BANKER_MAX_BET_AMOUNT = asset(1000 * 10000, EOS_SYMBOL); //系统上庄最大投注额
-const asset CUR_MAX_BET = asset(1000 * 10000, EOS_SYMBOL);                //单人投注最大额
 
-/*
- *
- *  typedef eosio::multi_index<"globalstate"_n, global_state> global_state_index;
-    typedef eosio::multi_index<"game"_n, game,indexed_by<"createdat"_n,
-    typedef eosio::multi_index<"bets"_n, bets> bets_index;
-    typedef eosio::multi_index<"upbankers"_n, up_bankers> up_bankers_index;
-    typedef eosio::multi_index<"resbankers"_n, res_bankers> res_bankers_index;
-    typedef eosio::multi_index<"currounda"_n, cur_round,indexed_by<"createdat"_n,
-    typedef eosio::multi_index<"hisrounds"_n, his_rounds,indexed_by<"createdat"_n,
-
- * */
 // 枚举 预约上庄action
-enum res_bank_action {
+enum RES_BANK_ACTION {
     up_banker_action = 1,
     down_bank_action,
     increase_banker_action,
@@ -94,7 +105,8 @@ enum GAME_STATE {
     stop_bet_game_state,
     open_card_game_state,
     start_settlement_game_state,
-    finish_settlement_game_state
+    finish_settlement_game_state,
+    cancel_settlement_game_state
 };
 
 /*
@@ -109,6 +121,7 @@ enum ROUND_STATE {
     ongoing_round_state = 1,
     start_settlement_round_state,
     finish_settlement_round_state,
+    cancel_settlement_round_state
 };
 
 /*
@@ -117,7 +130,20 @@ enum ROUND_STATE {
 enum BET_STATE {
     pending_settlement_bet_state = 1,
     start_settlement_bet_state,
+    //todo::取消逻辑,结算的时候，结束就直接删了不用更新
     finished_settlement_bet_state,
+};
+
+/*
+ * 1：上庄中
+2：预约下庄
+3：预约下调，处理成功后，转为1上庄
+ * */
+
+enum UP_BANKER_STATE {
+    up_banker_state = 1,
+    res_down_banker_state,
+    res_reduce_banker_state
 };
 
 /*
@@ -157,8 +183,8 @@ enum CARDS_COMBINATION_TYPE {
 
 class CARDS_ALLOCATION {
 public:
-    vector <uint32_t> origin_allocation;   //通过wash_hash 拿到的排序
-    vector <uint32_t> max_allocation;     //对自身的120中组合取最大牌型组合
+    vector<uint32_t> origin_allocation;   //通过wash_hash 拿到的排序
+    vector<uint32_t> max_allocation;     //对自身的120中组合取最大牌型组合
     uint32_t max_allocation_type;       // 最大牌型类型
     string max_allocation_type_name;       // 最大牌型类型对应的名称
     uint32_t max_card_number;           //最大牌型的最大点数
@@ -182,12 +208,12 @@ CARDS_ALLOCATION CARDS_ALLOCATION_DEFAULT = {{0, 0, 0, 0, 0}, {0, 0, 0, 0, 0}, 0
 
 class CARDS_ALLOCATIONS {
 public:
-    vector <CARDS_ALLOCATION> data;
+    vector<CARDS_ALLOCATION> data;
     uint32_t data_length;
 
     std::string to_json() {
         uint32_t i = 0;
-        vector <string> tmp_str;
+        vector<string> tmp_str;
         while (i < data_length) {
             tmp_str.push_back(data[i++].to_json());
         }

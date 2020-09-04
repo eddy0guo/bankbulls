@@ -1,3 +1,5 @@
+#pragma once
+
 #include <eosio/crypto.hpp>
 #include <eosio/asset.hpp>
 #include <eosio/eosio.hpp>
@@ -68,12 +70,12 @@ string sha256_to_hex(const checksum256 &sha256) {
 // copied from boost https://www.boost.org/
 template<class T>
 inline void hash_combine(std::size_t &seed, const T &v) {
-    std::hash <T> hasher;
+    std::hash<T> hasher;
     seed ^= hasher(v) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
 }
 
 uint64_t uint64_hash(const string &hash) {
-    return std::hash < string > {}(hash);
+    return std::hash<string>{}(hash);
 }
 
 uint64_t uint64_hash(const checksum256 &hash) {
@@ -151,7 +153,7 @@ bool DecodeBase58(const char *psz, std::vector<unsigned char> &vch) {
             "mapBase58.size() should be 256");  // guarantee not out of range
     while (*psz && !isspace(*psz)) {
         // Decode base58 character
-        int carry = mapBase58[(uint8_t) * psz];
+        int carry = mapBase58[(uint8_t) *psz];
         if (carry == -1)  // Invalid b58 character
             return false;
         int i = 0;
@@ -222,8 +224,8 @@ public_key string_to_public_key(unsigned int const key_type, std::string const &
     return public_key;
 }
 
-vector <string> split_string(const string &s, const string &c) {
-    vector <string> v;
+vector<string> split_string(const string &s, const string &c) {
+    vector<string> v;
     string::size_type pos1, pos2;
     pos2 = s.find(c);
     pos1 = 0;
@@ -240,9 +242,19 @@ vector <string> split_string(const string &s, const string &c) {
 
 asset string_to_asset(string asset_str) {
     //symbol(symbol_code("EOS"),4)
-    vector <string> asset_info = split_string(asset_str, " ");
+    vector<string> asset_info = split_string(asset_str, " ");
     check(asset_info[1] == "EOS", "token must be EOS");
-    vector <string> amount_info = split_string(asset_info[0], ".");
+    vector<string> amount_info = split_string(asset_info[0], ".");
     int64_t amount = stoll(amount_info[0]) * 10000 + stoll(amount_info[1]); //对冲掉assst除以1000的影响
     return {amount, EOS_SYMBOL};
+}
+
+template<typename T>
+void
+delay_call_action(name contract, name fee_account, name action, T tuple_info, uint32_t delay_time, uint64_t sender_id) {
+    eosio::transaction txn{};
+    txn.actions.emplace_back(eosio::permission_level(fee_account, "active"_n), contract, action, tuple_info);
+    txn.delay_sec = delay_time;
+    txn.send(sender_id, fee_account, false);
+    return;
 }

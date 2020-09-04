@@ -22,90 +22,15 @@ void finger_transfer(const name from, const name to, string token_contract_name,
 
 string get_eos_gestures();
 
-int32_t get_card_value(vector <uint32_t> all_cards_values, string wash_hash, uint32_t card_number_hex, uint32_t &i);
+int32_t get_card_value(vector<uint32_t> all_cards_values, string wash_hash, uint32_t card_number_hex, uint32_t &i);
 
 BET_RESULT compare_allocation(CARDS_ALLOCATION a, CARDS_ALLOCATION b);
 
-ALLOCATION_INFO get_allocation_info(vector <uint32_t> allocation);
+ALLOCATION_INFO get_allocation_info(vector<uint32_t> allocation);
 
-CARD get_max_card(vector <CARD> cards);
+CARD get_max_card(vector<CARD> cards);
 
 char sort_allocations(CARDS_ALLOCATIONS &allocations, string block_hash);
-
-void new_game(const name player,
-              const string &user_seed,
-              const checksum256 &house_seed_hash,
-              const uint64_t &expire_timestamp,
-              const signature &sig);
-
-void new_game(const name player,
-              const string &user_seed,
-              const checksum256 &house_seed_hash,
-              const uint64_t &expire_timestamp,
-              const signature &sig) {
-    require_auth(player);
-    //1. 签名前的数据，格式：服务端种子哈希+时间戳
-    string sig_ori_data = sha256_to_hex(house_seed_hash);
-    sig_ori_data += uint_string(expire_timestamp);
-
-    //3. 验签
-    //声明服务端签名合约公钥，用于验签
-    const public_key pub_key = str_to_pub("EOS7ikmSFnJ4UuAuGDPQMTZFBQa7Kh6QTzBAUivksFETmX6ncxGW7");
-    const char *data_cstr = sig_ori_data.c_str();
-    checksum256 digest = eosio::sha256(data_cstr, strlen(data_cstr));
-    //必须是pub_key对应的私钥签名
-    //如果不是，直接抛出异常
-    eosio::assert_recover_key(digest, sig, pub_key);
-}
-
-string get_eos_gestures() {
-    eosio::checksum256 hash = get_current_hash();
-    uint64_t hash2 = uint64_hash(hash);
-    uint32_t now = current_time_point().sec_since_epoch();
-    uint32_t random_roll = (hash2 + now) % 3;
-    print("hash2=", hash2, " now=", now, " random_roll=", random_roll);
-    string gestures = ""; //default
-    if (random_roll == 0) {
-        gestures = "rock";
-    } else if (random_roll == 1) {
-        gestures = "paper";
-    } else {
-        gestures = "scissors";
-    }
-    return gestures;
-}
-
-int computer_game_result(string users_gestures, string eos_gestures) {
-    //rock  paper scissors
-    if (users_gestures == "rock") {
-        if (eos_gestures == "rock") {
-            return 0;
-        } else if (eos_gestures == "paper") {
-            return -1;
-        } else {
-            return 1;
-        }
-    } else if (users_gestures == "paper") {
-        if (eos_gestures == "rock") {
-            return 1;
-        } else if (eos_gestures == "paper") {
-            return 0;
-        } else {
-            return -1;
-        }
-    } else if (users_gestures == "scissors") {
-        if (eos_gestures == "rock") {
-            return -1;
-        } else if (eos_gestures == "paper") {
-            return 1;
-        } else {
-            return 0;
-        }
-    } else {
-        check(false, "users_gestures is wrong");
-    }
-    return -1;
-}
 
 void finger_transfer(const name from, const name to, string token_contract_name, int64_t amount, string memo) {
     symbol current_symbol = token_contract_name == "eosio.token" ? EOS_SYMBOL : FINGER_SYMBOL;
@@ -155,6 +80,7 @@ uint64_t get_account_balance(name account)
 
    return balance;
 }**/
+
 uint64_t get_account_balance(name account) {
     struct accounta {
         asset balance;
@@ -212,7 +138,7 @@ string wash_hash(string seed, string block_hash) {
 CARDS_ALLOCATIONS deal_cards(string wash_result) {
     //wash_result = "55555555555555555551154faf9e33a21f31cc80a97fef4c3bfb7797c05e52f8";
     //wash_result = "5555555555555555555555555555555555555555555555555555555555555555";
-    vector <uint32_t> origin_allocation;
+    vector<uint32_t> origin_allocation;
     CARDS_ALLOCATION cards_allocation = CARDS_ALLOCATION_DEFAULT;
     CARDS_ALLOCATIONS cards_allocations;
     uint32_t max_round = 5;
@@ -220,7 +146,7 @@ CARDS_ALLOCATIONS deal_cards(string wash_result) {
     uint32_t j = 0;
 
     //all为统计历史已经抽到的牌做反向过滤用
-    vector <uint32_t> all_cards_values;
+    vector<uint32_t> all_cards_values;
     //下标至少为1
     for (uint32_t i = end_index; i > 0; i--) {
         //char card_number_char = wash_result.substr(i, 1);
@@ -286,7 +212,7 @@ void get_max_combination(CARDS_ALLOCATIONS &cards_allocations) {
     //vector<CARDS_ALLOCATION> kkkk;
     while (length--) {
         //开牌初始开拍顺序作为初始max组合
-        vector <uint32_t> origin_allocation = cards_allocations.data[length].origin_allocation;
+        vector<uint32_t> origin_allocation = cards_allocations.data[length].origin_allocation;
         ALLOCATION_INFO info = get_allocation_info(cards_allocations.data[length].origin_allocation);
         cards_allocations.data[length].max_allocation = origin_allocation;
         cards_allocations.data[length].max_allocation_type = std::get<0>(info);
@@ -297,7 +223,7 @@ void get_max_combination(CARDS_ALLOCATIONS &cards_allocations) {
         CARDS_ALLOCATION tmp_max_allocation = cards_allocations.data[length];
 
         uint32_t tmp_max_card_number = 0;
-        vector <uint32_t> cards = {0, 0, 0, 0, 0};
+        vector<uint32_t> cards = {0, 0, 0, 0, 0};
         /**
         printf("   origin=[%d,%d,%d,%d,%d]  ", origin_allocation[0],
                origin_allocation[1], origin_allocation[2],
@@ -389,8 +315,8 @@ BET_RESULT compare_allocation(CARDS_ALLOCATION a, CARDS_ALLOCATION b) {
     boom_bull, small_bull, straight_flush
 };
  * **/
-ALLOCATION_INFO get_allocation_info(vector <uint32_t> allocation) {
-    vector <CARD> new_allocation = {};
+ALLOCATION_INFO get_allocation_info(vector<uint32_t> allocation) {
+    vector<CARD> new_allocation = {};
     for (auto iter = allocation.cbegin(); iter != allocation.cend(); iter++) {
         CARD tmp_card = {*iter, *iter % 16, *iter / 16};
         new_allocation.push_back(tmp_card);
@@ -509,7 +435,7 @@ ALLOCATION_INFO get_allocation_info(vector <uint32_t> allocation) {
 }
 
 
-CARD get_max_card(vector <CARD> cards) {
+CARD get_max_card(vector<CARD> cards) {
     CARD max_card = {0, 0, 0};
     for (auto iter = cards.cbegin(); iter != cards.cend(); iter++) {
         if (iter->number == max_card.number) {
@@ -522,7 +448,7 @@ CARD get_max_card(vector <CARD> cards) {
     return max_card;
 }
 
-int32_t get_card_value(vector <uint32_t> all_cards_values, string wash_hash, uint32_t card_number_hex, uint32_t &i) {
+int32_t get_card_value(vector<uint32_t> all_cards_values, string wash_hash, uint32_t card_number_hex, uint32_t &i) {
     //fixme: 改为enum
     int32_t card_value = -2;
     uint32_t j = 0;
@@ -565,7 +491,7 @@ char sort_allocations(CARDS_ALLOCATIONS &allocations, string block_hash) {
     uint32_t last_char_hex = from_hex(last_char);
     printf("last_char_hex=%x", last_char_hex);
     uint32_t banker_index = last_char_hex % 5;
-    vector <CARDS_ALLOCATION> tmp_allocations;
+    vector<CARDS_ALLOCATION> tmp_allocations;
     //uint32_t banker_index =
     //allocations.data_length = 5
     for (uint32_t i = banker_index; i < 5; i++) {
@@ -581,7 +507,7 @@ char sort_allocations(CARDS_ALLOCATIONS &allocations, string block_hash) {
 }
 
 vector<string> flush_cards_allocations_to_table(name finger_official, CARDS_ALLOCATIONS cards_allocations,
-                                      string wash_result, string block_hash,char sort_char) {
+                                                string wash_result, string block_hash, char sort_char) {
     //庄家牌序号
     uint32_t length = block_hash.length();//64
     char last_char;
@@ -593,15 +519,11 @@ vector<string> flush_cards_allocations_to_table(name finger_official, CARDS_ALLO
     uint32_t last_char_hex = from_hex(last_char);
 
     uint64_t last_game_id = models::game::get_last_id(finger_official);
-    vector <string> allocation_infos;
-    vector <string> tmp_card_jsons;
-    vector <int32_t> bet_results;
-    //string allocation_info;
-    //string card_log_info;
+    vector<string> allocation_infos;
+    vector<string> tmp_card_jsons;
+    vector<int32_t> bet_results;
     //下标0为庄
     for (uint32_t i = 0; i < 5; i++) {
-        //fixme:char* tmp_allocation_info = "";
-        //char *tmp_info = "";
         string tmp_allocation_info = "";
         string tmp_card_json = "";
         tmp_card_json.clear();
@@ -615,16 +537,14 @@ vector<string> flush_cards_allocations_to_table(name finger_official, CARDS_ALLO
             string card_number_icon = CARD_NUMBER_ICON.find(card_number)->second;
             string card_type_icon = CARD_TYPE_ICON.find(card_type)->second;
             //std::sprintf(tmp_info, "%d[%s%s],", card_value, card_type_icon.data(), card_number_icon.data());
-            tmp_allocation_info += uint_string(card_value) + "[" + card_type_icon +
-                    card_number_icon + "]";
+            tmp_allocation_info += uint_string(card_value) + "[" + card_type_icon + card_number_icon + "]";
             tmp_card_json += uint_string(card_value) + "|";
-            //allocation_info.append(tmp_info);
         }
 
         //通过当前的排序和hash最后排序的char来反推原始选牌顺序
         uint32_t last_char_hex = from_hex(last_char);
         uint64_t allocation_index = i + 1 + last_char_hex % 5;
-        if(allocation_index > 5){
+        if (allocation_index > 5) {
             allocation_index -= 5;
         }
         //庄家不拼接输赢结果
@@ -636,7 +556,8 @@ vector<string> flush_cards_allocations_to_table(name finger_official, CARDS_ALLO
             tmp_allocation_info += cards_allocations.data[i].max_allocation_type_name + "," + std::get<1>(result);
             int32_t user_bet_result = std::get<0>(result) == 1 ? cards_allocations.data[i].winner_ratio
                                                                : -1 * cards_allocations.data[0].winner_ratio;
-            user_bet_result_str = user_bet_result > 0 ? uint_string(user_bet_result) : "-" + uint_string(-user_bet_result);
+            user_bet_result_str =
+                    user_bet_result > 0 ? uint_string(user_bet_result) : "-" + uint_string(-user_bet_result);
             bet_results.push_back(user_bet_result);
         }
         tmp_card_json += uint_string(allocation_index) + "|" +
@@ -647,17 +568,19 @@ vector<string> flush_cards_allocations_to_table(name finger_official, CARDS_ALLO
         //printf("   4[%s   ",tmp_card_json.data());
         tmp_card_jsons.push_back(tmp_card_json);
     }
-
-    models::game::update(finger_official, last_game_id, allocation_infos, bet_results, last_char_hex, wash_result);
+    checksum256 current_txid = get_current_hash();
+    string txid_str = sha256_to_hex(current_txid);
+    models::game::update(finger_official, last_game_id, allocation_infos, bet_results, last_char_hex, wash_result,
+                         txid_str);
     return tmp_card_jsons;
 }
 
 void flush_cards_allocations_to_block(name contract) {
     uint64_t last_game_id = models::game::get_last_id(contract);
-    models::bankbulls::game game = models::game::find(contract, last_game_id);
+    bankbulls::game game = models::game::find(contract, last_game_id);
 
-    std::tuple <uint64_t, uint32_t, uint32_t, string, string, string, string, string, int32_t,
-    int32_t, int32_t, int32_t, uint32_t, uint32_t, uint64_t, string, string, string, string>
+    std::tuple<uint64_t, uint32_t, uint32_t, string, string, string, string, string, int32_t,
+            int32_t, int32_t, int32_t, uint32_t, uint32_t, uint64_t, string, string, string, string>
             params = std::make_tuple(game.id, game.state, game.dealer_hand_number,
                                      game.dealer_card, game.spades_card, game.hearts_card,
                                      game.clubs_card, game.diamonds_card, game.spades_result,
@@ -671,14 +594,17 @@ void flush_cards_allocations_to_block(name contract) {
             .send();
 }
 
-//todo：如果是最后一笔的就改局结算结束，game表状态改为已完成，反之则是进行中
-void start_settlement(name contract, uint32_t dispose_count) {
-    uint64_t last_game_id = models::game::get_last_id(contract);
+void start_settlement_game(name contract, uint32_t dispose_count, uint32_t game_id) {
+    vector<bankbulls::game> games = models::game::list_by_created(contract);
+    bankbulls::game last_game = games[0];
+    //uint64_t last_game_id = games[0].id;
+    uint64_t last_game_id = game_id;
+
+
     uint64_t last_cur_round_id = models::cur_round::get_last_id(contract);
-    models::bankbulls::game last_game = models::game::find(contract, last_game_id);
-    //
-    vector <models::bankbulls::bets> bets_list = models::bets::list(contract, last_game_id, start_settlement_bet_state);
-    check(dispose_count <= bets_list.size(), "dispose_count must be less than bets length");
+    vector<bankbulls::bets> bets_list = models::bets::list(contract, last_game_id, start_settlement_bet_state);
+    //check(dispose_count <= bets_list.size(), "dispose_count must be less than bets length");
+    dispose_count = dispose_count <= bets_list.size() ? dispose_count : bets_list.size();
     printf("-----%d--", bets_list[0].created_at);
 
 
@@ -729,8 +655,8 @@ void start_settlement(name contract, uint32_t dispose_count) {
         //庄家输赢和闲家输赢相反
         banker_win_lose_amount += payout_spades_amount * -1 + payout_hearts_amount * -1 +
                                   payout_clubs_amount * -1 + payout_diamonds_amount * -1;
-        if(banker_win_lose_amount < 0){
-            string winner_info = player_winners_json(bets_list[i].player,asset(-banker_win_lose_amount,EOS_SYMBOL));
+        if (banker_win_lose_amount < 0) {
+            string winner_info = player_winners_json(bets_list[i].player, asset(-banker_win_lose_amount, EOS_SYMBOL));
             winner_infos.push_back(winner_info);
         }
 
@@ -741,26 +667,51 @@ void start_settlement(name contract, uint32_t dispose_count) {
                              payout_clubs_amount +
                              payout_diamonds_amount;
         printf(" --payout_all=%d--  ", payout_all);
-        finger_transfer(contract, bets_list[i].player, "eosio.token", payout_all, "bank bull settlement");
-        models::bets::update(contract, bets_list[i].id, finished_settlement_bet_state);
+        uint128_t sender_id = TRANSFER_SID + last_game_id * 100 + i;
+        if (games[0].state == cancel_settlement_game_state) {
+            payout_all = bets_list[i].bet_amount.amount * 3;
+            //100为并行结算的时候，两批game-id的隔离区间，防止并行结算senderid冲突
+            printf("  1a ");
+            delay_call_action(name("eosio.token"),
+                              contract,
+                              name("transfer"),
+                              std::make_tuple(contract, bets_list[i].player, asset(payout_all, EOS_SYMBOL),
+                                              std::string("cancel bank bull settlement")),
+                              1, sender_id);
+            printf(" 1b ");
+            //fixme:不更新直接删？
+            //models::bets::update(contract, bets_list[i].id, finished_settlement_bet_state);
+            printf("   yy1-%d   ",bets_list[i].id);
+            models::bets::remove(contract, bets_list[i].id);
+            continue;
+        }
+        //finger_transfer(contract, bets_list[i].player, "eosio.token", payout_all, "bank bull settlement");
+        delay_call_action(name("eosio.token"),
+                          contract,
+                          name("transfer"),
+                          std::make_tuple(contract, bets_list[i].player, asset(payout_all, EOS_SYMBOL),
+                                          std::string("bank bull settlement")),
+                          1, sender_id);
+        //models::bets::update(contract, bets_list[i].id, finished_settlement_bet_state);
+        models::bets::remove(contract, bets_list[i].id);
+
 
         //block存证
-        std::tuple <uint64_t, name, uint32_t,
-        string, string, string,
-        string, string, asset,
-        asset, asset, asset, asset,
-        asset, asset, asset, asset,
-        uint32_t, string, string,
-        string, uint64_t, string> params = std::make_tuple(
+        std::tuple<uint64_t, name, uint32_t,
+                string, string, string,
+                string, string, asset,
+                asset, asset, asset, asset,
+                asset, asset, asset, asset,
+                uint32_t, string, string,
+                string, uint64_t, string> params = std::make_tuple(
                 last_game.id, bets_list[i].player, last_game.dealer_hand_number,
                 last_game.dealer_card, last_game.spades_card, last_game.hearts_card,
                 last_game.clubs_card, last_game.diamonds_card, bets_list[i].spades_amt,
                 bets_list[i].hearts_amt, bets_list[i].clubs_amt, bets_list[i].diamonds_amt, bets_list[i].bet_amount,
                 payout_spades, payout_hearts, payout_clubs, payout_diamonds,
                 last_game.reveal_at, last_game.seed, last_game.sign,
-                SERVICE_PUBKEY, last_game.block_index, last_game.block_hash);
+                last_game.public_key, last_game.block_index, last_game.block_hash);
         //todo：调用eos合约打钱，保证金+payout就是最终的用户钱
-
         //todo：如果参数相同则只内联一次,如果问题无法解决则要引入betsid参数来保证每次调用参数的唯一
         action(permission_level{contract, name("active")},
                contract,
@@ -768,42 +719,43 @@ void start_settlement(name contract, uint32_t dispose_count) {
                params)
                 .send();
     }
+    //流局的话就不在更新相关表数据和日志
+    if (games[0].state == cancel_settlement_game_state) {
+        return;
+    }
     //更新轮次累积输赢
     models::cur_round::update(contract, last_cur_round_id, current_banker_win_amount,
                               current_banker_lose_amount, banker_win_lose_amount);
-
     //根据是否还有待结算的下注，来判断要更新的状态为进行中还是结算已完成
     bets_list = models::bets::list(contract, last_game_id, start_settlement_bet_state);
-    if(bets_list.size() == 0){
+    if (bets_list.size() == 0) {
         models::game::update(contract, last_game_id, finish_settlement_game_state);
-        string game_settlement_info = game_settlement_json(last_game_id,finish_settlement_game_state,
-                asset(current_banker_lose_amount,EOS_SYMBOL),winner_infos);
+        string game_settlement_info = game_settlement_json(last_game_id, finish_settlement_game_state,
+                                                           asset(current_banker_lose_amount, EOS_SYMBOL), winner_infos);
         //logs2为结算完成表
-        models::logs2::insert(contract,game_settlement_info);
-
-    }else{
+        models::logs2::insert(contract, game_settlement_info);
+    } else {
         models::game::update(contract, last_game_id, start_settlement_game_state);
-        string game_settlement_info = game_settlement_json(last_game_id,start_settlement_game_state,
-                asset(current_banker_lose_amount,EOS_SYMBOL),winner_infos);
-        models::logs::insert(contract,game_settlement_info);
+        string game_settlement_info = game_settlement_json(last_game_id, start_settlement_game_state,
+                                                           asset(current_banker_lose_amount, EOS_SYMBOL), winner_infos);
+        models::logs::insert(contract, game_settlement_info);
     }
-    //printf("  =%s=  ",game_settlement_info.data());
     return;
-
 }
 
 bool update_up_banker_and_settlement(name contract) {
     printf(" *a* ");
     // todo: 预约表数据转移到上庄表，&&清理预约表，没有预约上下庄的，自动
-    vector <models::bankbulls::up_bankers> up_banker_list = models::up_bankers::list(contract);
-    vector <models::bankbulls::res_bankers> res_banker_list = models::res_bankers::list(contract);
-    //没有预约的默认继续坐庄
+    vector<bankbulls::up_bankers> up_banker_list = models::up_bankers::list(contract);
+    vector<bankbulls::res_bankers> res_banker_list = models::res_bankers::list(contract);
+
     //只更新投资额
     printf(" *b* ");
     for (uint32_t i = 0; i != res_banker_list.size(); i++) {
         if (res_banker_list[i].action == up_banker_action) {
             models::up_bankers::insert(contract, res_banker_list[i].account, res_banker_list[i].investment,
-                                       asset(0, EOS_SYMBOL), asset(0, EOS_SYMBOL), 0, 0, 0, 0);
+                                       asset(0, EOS_SYMBOL), asset(0, EOS_SYMBOL), 0, 0, 0,
+                                       0, up_banker_state, res_banker_list[i].investment);
             continue;
         }
         for (uint32_t j = 0; j != up_banker_list.size(); j++) {
@@ -811,29 +763,50 @@ bool update_up_banker_and_settlement(name contract) {
                 switch (res_banker_list[i].action) {
                     case down_bank_action : {
                         //删除next中对应的原来的庄
-                        models::up_bankers::remove(contract, res_banker_list[i].account);
-                        int64_t payout_all = up_banker_list[j].investment.amount +
-                                             up_banker_list[j].total_divide.amount;
-                        finger_transfer(contract, up_banker_list[j].account, "eosio.token",
-                                        payout_all, "banker bulls down bank settlement");
+                        //models::up_bankers::remove(contract, res_banker_list[i].account);
+                        //int64_t payout_all = up_banker_list[j].investment.amount;
+                        //finger_transfer(contract, up_banker_list[j].account, "eosio.token",
+                        //              payout_all, "banker bulls down bank settlement");
+                        models::up_bankers::update(contract, res_banker_list[i].account,
+                                                   up_banker_list[j].investment, res_down_banker_state,
+                                                   up_banker_list[j].investment);
                         break;
                     }
                     case increase_banker_action: {
                         //up_item.investment.amount += res_item.investment.amount;
                         int64_t next_investment_amount = up_banker_list[j].investment.amount +
-                                                         res_banker_list[i].investment.amount +
-                                                         up_banker_list[j].total_divide.amount;
+                                                         res_banker_list[i].investment.amount;
                         asset next_investment = asset(next_investment_amount, EOS_SYMBOL);
-                        models::up_bankers::update(contract, res_banker_list[i].account, next_investment);
+                        //上调的状态也为up_banker_state
+                        models::up_bankers::update(contract, res_banker_list[i].account,
+                                                   next_investment, up_banker_state, res_banker_list[i].investment);
                         break;
                     }
                     case reduce_banker_action: {
                         int64_t next_investment_amount = up_banker_list[j].investment.amount -
-                                                         res_banker_list[i].investment.amount +
-                                                         up_banker_list[j].total_divide.amount;
-                        check(next_investment_amount > 0, "next investment amount must be more than zero");
+                                                         res_banker_list[i].investment.amount;
+                        //透支下调不在报错，改为直接下庄
+                        //check(next_investment_amount > 0, "next investment amount must be more than zero");
                         asset next_investment = asset(next_investment_amount, EOS_SYMBOL);
-                        models::up_bankers::update(contract, res_banker_list[i].account, next_investment);
+                        //减仓生效后若余额低于50EOS将自动下庄。
+                        bankbulls::global_state limit_system_bank = models::global_state::find(contract,
+                                                                                               name(LIMIT_SYSTEM_BANK_KEY_NAME));
+                        uint64_t limit_system_bank_amount = strtoull(limit_system_bank.value.c_str(), NULL, 0);
+
+                        if (next_investment_amount >= limit_system_bank_amount) {
+                            models::up_bankers::update(contract, res_banker_list[i].account,
+                                                       next_investment, res_reduce_banker_state,
+                                                       res_banker_list[i].investment);
+                        } else {
+                            next_investment.amount =
+                                    up_banker_list[j].investment.amount;
+                            models::up_bankers::update(contract, res_banker_list[i].account,
+                                                       next_investment, res_down_banker_state,
+                                                       res_banker_list[i].investment);
+                        }
+
+                        //finger_transfer(contract, up_banker_list[j].account, "eosio.token",
+                        //              res_banker_list[i].investment.amount, "banker bulls down bank settlement");
                         break;
                     }
                     default:
@@ -850,6 +823,9 @@ bool update_up_banker_and_settlement(name contract) {
     uint64_t sum_investment = 0;
     up_banker_list = models::up_bankers::list(contract);
     for (uint32_t k = 0; k != up_banker_list.size(); k++) {
+        if (up_banker_list[k].state == res_down_banker_state) {
+            continue;
+        }
         if (up_banker_list[k].account == contract) {
             models::up_bankers::remove(contract, contract);
             continue;
@@ -857,11 +833,13 @@ bool update_up_banker_and_settlement(name contract) {
         sum_investment += up_banker_list[k].investment.amount;
     }
     printf(" *d* ");
-    //todo:动态获取limit_system_bank * 20
     //小于阀值，系统以所有金额补庄
-    if (sum_investment < 20 * 50 * 10000) {
+    bankbulls::global_state limit_system_bank = models::global_state::find(contract, name(LIMIT_SYSTEM_BANK_KEY_NAME));
+    uint64_t limit_system_bank_amount = strtoull(limit_system_bank.value.c_str(), NULL, 0);
+    if (sum_investment < 20 * limit_system_bank_amount) {
         asset balance = asset(get_account_balance(contract), EOS_SYMBOL);
-        models::up_bankers::insert(contract, contract, balance, balance, asset(0, EOS_SYMBOL), 0, 0, 0, 0);
+        models::up_bankers::insert(contract, contract, balance, balance, asset(0, EOS_SYMBOL), 0, 0, 0, 0, 1,
+                                   DEFAULT_ASSET);
         sum_investment += balance.amount;
     }
 
@@ -877,7 +855,6 @@ bool update_up_banker_and_settlement(name contract) {
         asset total_divide = asset(0, EOS_SYMBOL);
         uint32_t created_at = current_time_point().sec_since_epoch();
         uint64_t start_game_id = models::game::get_last_id(contract) + 1;
-        //在update_up_banker逻辑之前刚插入了当前轮次，因此这里不在+1
         uint64_t start_round_id = models::cur_round::get_last_id(contract) + 1;
         models::up_bankers::update(contract, user, balance, total_divide,
                                    created_at, bet_ratio, start_game_id, start_round_id);
@@ -897,37 +874,52 @@ void update_cur_round(name contract, uint64_t last_round_id) {
     asset system_investment = zero_eos;
     asset player_banker_balance = zero_eos;
     asset system_banker_balance = zero_eos;
+    system_banker_balance.amount = get_account_balance(contract);
     uint32_t banker_num = 0;
-    vector <models::bankbulls::up_bankers> up_banker_list = models::up_bankers::list(contract);
+    vector<bankbulls::up_bankers> up_banker_list = models::up_bankers::list(contract);
     for (uint32_t k = 0; k != up_banker_list.size(); k++) {
+        //待下庄的数据不在统计
+        if (up_banker_list[k].state == res_down_banker_state) {
+            continue;
+        }
         banker_num++;
         if (up_banker_list[k].account == contract) {
             system_investment.amount = up_banker_list[k].investment.amount;
-            system_banker_balance.amount = up_banker_list[k].balance.amount;
+            //system_banker_balance.amount = up_banker_list[k].balance.amount;
             continue;
         }
         player_investment.amount += up_banker_list[k].investment.amount;
         player_banker_balance.amount += up_banker_list[k].balance.amount;
     }
-//todo::当前轮次表推入历史轮次表之后清空
-    bool result = models::cur_round::insert(contract, last_round_id + 1, last_game_id, player_investment,
-                                            system_investment, player_banker_balance, system_banker_balance,
-                                            PLAYER_BANKER_MAX_BET_AMOUNT, SYSTEM_BANKER_MAX_BET_AMOUNT, CUR_MAX_BET,
-                                            banker_num, zero_eos, zero_eos, zero_eos, zero_eos,
-                                            zero_eos, zero_eos, zero_eos,
-                                            zero_eos, ongoing_round_state, created_at, stop_at);
-    check(result, "cur_round insert failed");
+    /*
+     * //player_banker_max_bet_amount	asset	玩家上庄最大投注总额
+//        system_banker_max_bet_amount	asset	仅系统上庄最大投注总额
+//cur_max_bet	asset	单人投注最大额
+     * */
+
+    asset player_banker_max_bet_asset = player_investment;
+    player_banker_max_bet_asset.amount = player_investment.amount * 15 / 1000;
+    asset system_banker_max_bet_asset = system_investment;
+    system_banker_max_bet_asset.amount = system_investment.amount * 15 / 1000;
+
+    string cur_max_limit = player_investment.amount == 0 ? LIMIT_SYSTEM_BANK_KEY_NAME : LIMIT_PLAY_BANK_KEY_NAME;
+    bankbulls::global_state limit_setting = models::global_state::find(contract, name(cur_max_limit));
+    uint64_t limit_setting_amount = strtoull(limit_setting.value.c_str(), NULL, 0);
+    asset cur_max_asset = asset(limit_setting_amount, EOS_SYMBOL);
+
+    models::cur_round::insert(contract, last_round_id + 1, last_game_id, player_investment,
+                              system_investment, player_banker_balance, system_banker_balance,
+                              player_banker_max_bet_asset, system_banker_max_bet_asset, cur_max_asset,
+                              banker_num, zero_eos, zero_eos, zero_eos, zero_eos,
+                              zero_eos, zero_eos, zero_eos,
+                              zero_eos, ongoing_round_state, created_at, stop_at);
     return;
 }
 
-void insert_hisround_from_curound(name contract, models::bankbulls::cur_round cur_round) {
+void insert_hisround_from_curound(name contract, bankbulls::cur_round cur_round) {
     uint64_t id = cur_round.id;
-    vector<models::bankbulls::his_rounds> last_his_round = models::his_round::get_last(contract);
-    uint64_t start_game_id;
-    if (last_his_round.size() == 0) {
-        start_game_id = 1;
-    }
-    start_game_id = last_his_round[0].end_game_id;
+    vector<bankbulls::his_rounds> last_his_round = models::his_round::get_last(contract);
+    uint64_t start_game_id = last_his_round.size() == 0 ? 1 : last_his_round[0].end_game_id;
     uint64_t end_game_id = cur_round.cur_game_id;
     asset bank_investment = asset(cur_round.player_investment.amount +
                                   cur_round.system_investment.amount, EOS_SYMBOL);
@@ -937,7 +929,7 @@ void insert_hisround_from_curound(name contract, models::bankbulls::cur_round cu
     asset sys_investment = cur_round.system_investment;
     asset sys_balance = cur_round.system_banker_balance;
     //系统总盈利=输赢总额 减掉用户庄分成的余下的额度
-    vector <models::bankbulls::up_bankers> up_bankers_list = models::up_bankers::list(contract);
+    vector<bankbulls::up_bankers> up_bankers_list = models::up_bankers::list(contract);
     int64_t sum_bankers_divide = 0;
     for (uint32_t i = 0; i < up_bankers_list.size(); i++) {
         if (up_bankers_list[i].account == contract) {
@@ -952,6 +944,44 @@ void insert_hisround_from_curound(name contract, models::bankbulls::cur_round cu
                               bank_investment, bank_balance, bank_profit,
                               sys_investment, sys_balance, sys_profit,
                               created_at, end_time);
+    return;
+}
+
+/*插入bankersup
+ * 更新curround---比例，投资额
+ * */
+void system_join_bankers(name contract) {
+    vector<bankbulls::cur_round> cur_round = models::cur_round::list_by_created(contract);
+    //fixme::这里是否要过滤状态，此时游戏结算的时候已经都是状态1了
+    vector<bankbulls::up_bankers> up_bankers = models::up_bankers::list(contract);
+    int64_t sys_balance_amt = get_account_balance(contract);
+    int64_t total_investment_amt = sys_balance_amt + cur_round[0].player_investment.amount;
+    asset sys_balance_asset = asset(sys_balance_amt, EOS_SYMBOL);
+    uint32_t created_at = current_time_point().sec_since_epoch();
+    uint64_t sum_sys_ratio = 0;
+    for (auto item:up_bankers) {
+
+        uint64_t bet_ratio = item.investment.amount * 1000000 / total_investment_amt;
+        sum_sys_ratio += item.investment.amount * 1000000 / total_investment_amt;
+        models::up_bankers::update(contract, item.account, bet_ratio, "test1", "test2");
+    }
+    /**
+     * static bool insert(name contract, name user, asset investment, asset balance, asset total_divide,
+                           uint32_t created_at, uint64_t bet_ratio, uint64_t start_game_id,
+                           uint64_t start_round_id, uint32_t state, asset res_amt) {
+     * **/
+    uint64_t sys_bets_ratio = 1000000 - sum_sys_ratio;
+    models::up_bankers::insert(contract, contract, sys_balance_asset, sys_balance_asset, DEFAULT_ASSET, created_at,
+                               sys_bets_ratio,
+                               up_bankers[0].start_game_id, up_bankers[0].start_round_id, 1, sys_balance_asset);
+    //asset cur_max_bet;                    //单人投注最大额
+    // uint32_t banker_num;                    //上庄总人数
+    //        asset system_investment;            //系统投资额
+    bankbulls::global_state max_bet = models::global_state::find(contract, name(LIMIT_PLAY_BANK_KEY_NAME));
+    uint64_t max_bet_amt = strtoull(max_bet.value.c_str(), NULL, 0);
+    asset max_bet_asset = asset(max_bet_amt, EOS_SYMBOL);
+
+    models::cur_round::update(contract, cur_round[0].id, max_bet_asset, cur_round[0].banker_num + 1, sys_balance_asset);
     return;
 }
 

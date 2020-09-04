@@ -4,6 +4,7 @@
 #include <eosio/transaction.hpp>
 //#include "eosio.token.hpp"
 #include <eosio/crypto.hpp>
+
 //#include "bankbulls_utils.hpp"
 
 
@@ -16,11 +17,11 @@ namespace models {
     class global_state {
         //string key, uint32_t value
     public:
-        static bool insert(name contract, uint64_t key, uint32_t value) {
+        static bool insert(name contract, name key, string value) {
             bankbulls::global_state_index global_state_table(contract, contract.value);
-            auto itr = global_state_table.find(key);
+            auto itr = global_state_table.find(key.value);
             if (itr != global_state_table.end()) {
-                check(false, "key already exist");
+                check(false, "32key already exist");
             }
             global_state_table.emplace(contract, [&](auto &u) {
                 u.key = key;
@@ -37,57 +38,86 @@ namespace models {
             return true;
         }
 
-        static bool remove(name contract, uint64_t key) {
+        static bool remove(name contract, name key) {
             bankbulls::global_state_index global_state_table(contract, contract.value);
-            auto itr = global_state_table.find(key);
+            auto itr = global_state_table.find(key.value);
             if (itr == global_state_table.end()) {
-                check(false, "user does not exist in table, nothing to delete");
+                check(false, "31user does not exist in table, nothing to delete");
             }
             global_state_table.erase(itr);
             return true;
         }
+
+        static bool update(name contract, name key, string value) {
+            bankbulls::global_state_index global_state_table(contract, contract.value);
+            auto itr = global_state_table.find(key.value);
+            if (itr == global_state_table.end()) {
+                check(false, "30setting key  does not exist in table,");
+            }
+            global_state_table.modify(itr, contract, [&](auto &u) {
+                u.value = value;
+            });
+            return true;
+        }
+
+        static bankbulls::global_state find(name contract, name key) {
+            bankbulls::global_state_index global_state_table(contract, contract.value);
+            bankbulls::global_state setting_info;
+            auto itr = global_state_table.find(key.value);
+            if (itr == global_state_table.end()) {
+                //check(false, "key does not exist in table");
+                for (auto item: SETTING_KEYS_DEFAULT) {
+                    if (key == item.key) {
+                        setting_info = item;
+                    }
+                }
+            } else {
+                setting_info = *itr;
+            }
+            return setting_info;
+        }
+
+        static bool is_exist(name contract, name key) {
+            bankbulls::global_state_index global_state_table(contract, contract.value);
+            auto itr = global_state_table.find(key.value);
+            if (itr == global_state_table.end()) {
+                return false;
+            }
+            return true;
+        }
+
+        static bool is_valid(name key) {
+            bool key_exist = false;
+            for (auto item : SETTING_KEYS_DEFAULT) {
+                if (item.key == key) {
+                    key_exist = true;
+                }
+            }
+            return key_exist;
+        }
+
+
     };
 
     class game {
     public:
-        /*
-            uint64_t id;
-            string sign;                   // 种子签名
-            uint32_t state;                // 游戏状态
-            // BYTE dealer_hand_number;	   // 庄家牌序号
-            uint32_t dealer_hand_number;    // 庄家牌序号
-            string dealer_card;            // 庄家牌显示
-            string spades_card;            //spades家牌显示
-            string hearts_card;            //hearts家牌显示
-            string clubs_card;             // clubs家牌显示
-            string diamonds_card;          //	diamonds家牌显示
-            int32_t spades_result;         //	spades家牌结果
-            int32_t hearts_result;         //	hearts家牌结果
-            int32_t clubs_result;          //clubs家牌结果
-            int32_t diamonds_result;       //	diamonds家牌结果
-            uint32_t reveal_at;            //开牌时间
-            uint64_t created_at;           //	创建时间
-            uint64_t stop_at;              //停止下注时间
-            uint64_t block_index;            //	区块高度
-            string block_hash;             //	区块HASH
-            string seed;                //游戏种子
-            string wash_hash;            //	洗牌HASH
-    }
-         * */
-        static bool insert(name contract, uint64_t id, string sign, uint32_t state, uint32_t dealer_hand_number,
-                           string dealer_card, string spades_card, string hearts_card, string clubs_card,
-                           string diamonds_card, int32_t spades_result, int32_t hearts_result, int32_t clubs_result,
-                           int32_t diamonds_result, uint32_t reveal_at, uint64_t created_at, uint64_t stop_at,
-                           uint64_t block_index, string block_hash, string seed, string wash_hash) {
+        static bool
+        insert(name contract, uint64_t id, string sign, string public_key, uint32_t state, uint32_t dealer_hand_number,
+               string dealer_card, string spades_card, string hearts_card, string clubs_card,
+               string diamonds_card, int32_t spades_result, int32_t hearts_result, int32_t clubs_result,
+               int32_t diamonds_result, uint32_t reveal_at, uint64_t created_at, uint64_t stop_at,
+               uint64_t block_index, string block_hash, string seed, string wash_hash,
+               string start_txid, string open_txid) {
 
             bankbulls::game_index game_table(contract, contract.value);
             auto itr = game_table.find(id);
             if (itr != game_table.end()) {
-                check(false, "game id already exist");
+                check(false, "29game id already exist");
             }
             game_table.emplace(contract, [&](auto &u) {
                 u.id = id;
                 u.sign = sign;
+                u.public_key = public_key;
                 u.state = state;
                 u.dealer_hand_number = dealer_hand_number;
                 u.dealer_card = dealer_card;
@@ -106,6 +136,8 @@ namespace models {
                 u.block_hash = block_hash;
                 u.seed = seed;
                 u.wash_hash = wash_hash;
+                u.start_txid = start_txid;
+                u.open_txid = open_txid;
             });
             return true;
         }
@@ -118,7 +150,7 @@ namespace models {
             bankbulls::game_index game_table(contract, contract.value);
             auto itr = game_table.find(id);
             if (itr == game_table.end()) {
-                check(false, "have no this game id");
+                check(false, "28have no this game id");
             }
             game_table.modify(itr, contract, [&](auto &u) {
                 u.state = state;
@@ -133,7 +165,7 @@ namespace models {
             bankbulls::game_index game_table(contract, contract.value);
             auto itr = game_table.find(id);
             if (itr == game_table.end()) {
-                check(false, "have no this game id");
+                check(false, "27have no this game id");
             }
             game_table.modify(itr, contract, [&](auto &u) {
                 u.state = state;
@@ -145,12 +177,12 @@ namespace models {
         }
 
         //更新开牌结果
-        static bool update(name contract, uint64_t id, vector <string> allocation_infos, vector <int32_t> bet_results,
-                           uint32_t last_char_hex, string wash_hash) {
+        static bool update(name contract, uint64_t id, vector<string> allocation_infos, vector<int32_t> bet_results,
+                           uint32_t last_char_hex, string wash_hash, string open_txid) {
             bankbulls::game_index game_table(contract, contract.value);
             auto itr = game_table.find(id);
             if (itr == game_table.end()) {
-                check(false, "have no this game id");
+                check(false, "26have no this game id");
             }
             game_table.modify(itr, contract, [&](auto &u) {
                 u.dealer_hand_number = last_char_hex;
@@ -164,6 +196,7 @@ namespace models {
                 u.clubs_result = bet_results[2];
                 u.diamonds_result = bet_results[3];
                 u.wash_hash = wash_hash;
+                u.open_txid = open_txid;
             });
             return true;
         }
@@ -182,12 +215,23 @@ namespace models {
             return true;
         }
 
+        static vector<bankbulls::game> list_by_created(name account) {
+            bankbulls::game_index game_table(account, account.value);
+            auto created_at_idx = game_table.get_index<"createdat"_n>();
+            vector<bankbulls::game> games = {};
+            for (const auto &item:created_at_idx) {
+                games.push_back(item);
+            }
+            return games;
+        }
+
+
         static uint64_t get_last_id(name account) {
             bankbulls::game_index game_table(account, account.value);
             auto created_at_idx = game_table.get_index<"createdat"_n>();
             auto last_itr = created_at_idx.begin();
             if (last_itr == created_at_idx.end()) {
-                printf("have nothing in table");
+                printf("25have nothing in table");
                 return 0;
             }
             return last_itr->id;
@@ -203,7 +247,7 @@ namespace models {
             bankbulls::bets_index bets_table(contract, contract.value);
             auto itr = bets_table.find(id);
             if (itr != bets_table.end()) {
-                check(false, "bets id already exist");
+                check(false, "24bets id already exist");
             }
             bets_table.emplace(contract, [&](auto &u) {
                 u.id = id;
@@ -221,15 +265,23 @@ namespace models {
             return true;
         }
 
-        static bool remove() {
+        static bool remove(name contract, uint64_t bet_id) {
+            bankbulls::bets_index bets_table(contract, contract.value);
+
+            auto itr = bets_table.find(bet_id);
+            if (itr == bets_table.end()) {
+                check(false, "23.5 bet id not found");
+            }
+            bets_table.erase(itr);
             return true;
         }
 
         static bool update(name contract, uint64_t id, uint64_t state) {
             bankbulls::bets_index bets_table(contract, contract.value);
             auto itr = bets_table.find(id);
+            //fixme:因为这里是倒叙的所以为begin？？
             if (itr == bets_table.end()) {
-                check(false, "have no this game id");
+                check(false, "23have no this bets id");
             }
             bets_table.modify(itr, contract, [&](auto &u) {
                 u.state = state;
@@ -242,8 +294,8 @@ namespace models {
         }
 
 
-        static vector <bankbulls::bets> list(name account, uint64_t game_id, uint32_t state) {
-            vector <bankbulls::bets> bets_list;
+        static vector<bankbulls::bets> list(name account, uint64_t game_id, uint32_t state) {
+            vector<bankbulls::bets> bets_list;
             bankbulls::bets_index bets_table(account, account.value);
             /**
             for (const auto &item : bets_table) {
@@ -272,7 +324,7 @@ namespace models {
             auto created_at_idx = bets_table.get_index<"createdat"_n>();
             auto last_itr = created_at_idx.begin();
             if (last_itr == created_at_idx.end()) {
-                printf("have nothing in table");
+                printf("22have nothing in table");
                 return 0;
             }
             return last_itr->id;
@@ -281,26 +333,13 @@ namespace models {
 
     class up_bankers {
     public:
-        /*
-         *   TABLE up_bankers{
-            name account;            //玩家
-            asset investment;        //投资额
-            asset balance;            //余额
-            asset total_divide;        //上庄分红总额
-            uint32_t created_at;        //创建时间
-            uint64_t bet_ratio;        //投资占比0.112066 = 112066
-            uint64_t start_game_id;        //开始游戏ID
-            uint64_t start_round_id;        //开始轮次ID
-            uint64_t primary_key() const { return account.value; }
-    };
-    typedef eosio::multi_index<"upbankers"_n, up_bankers> up_bankers_index;
-         * */
         static bool insert(name contract, name user, asset investment, asset balance, asset total_divide,
-                           uint32_t created_at, uint64_t bet_ratio, uint64_t start_game_id, uint64_t start_round_id) {
+                           uint32_t created_at, uint64_t bet_ratio, uint64_t start_game_id,
+                           uint64_t start_round_id, uint32_t state, asset res_amt) {
             bankbulls::up_bankers_index up_bankers_table(contract, contract.value);
             auto itr = up_bankers_table.find(user.value);
             if (itr != up_bankers_table.end()) {
-                check(false, "user have been exist already");
+                check(false, "21user have been exist already");
             }
             up_bankers_table.emplace(contract, [&](auto &u) {
                 u.account = user;
@@ -311,6 +350,8 @@ namespace models {
                 u.bet_ratio = bet_ratio;
                 u.start_game_id = start_game_id;
                 u.start_round_id = start_round_id;
+                u.state = state;
+                u.res_amt = res_amt;
             });
             return true;
         }
@@ -319,7 +360,7 @@ namespace models {
             bankbulls::up_bankers_index up_banker_table(contract, contract.value);
             auto itr = up_banker_table.find(user.value);
             if (itr == up_banker_table.end()) {
-                check(false, "user not found");
+                check(false, "20_user not found");
             }
             up_banker_table.erase(itr);
             return true;
@@ -334,8 +375,8 @@ namespace models {
         }
 
 
-        static vector <bankbulls::up_bankers> list(name contract) {
-            vector <bankbulls::up_bankers> up_banker_list;
+        static vector<bankbulls::up_bankers> list(name contract) {
+            vector<bankbulls::up_bankers> up_banker_list = {};
             bankbulls::up_bankers_index up_banker_table(contract, contract.value);
             for (const auto &item : up_banker_table) {
                 up_banker_list.push_back(item);
@@ -343,26 +384,39 @@ namespace models {
             return up_banker_list;
         }
 
+        static vector<bankbulls::up_bankers> list(name contract, uint32_t state1, uint32_t state2) {
+            vector<bankbulls::up_bankers> up_banker_list;
+            bankbulls::up_bankers_index up_banker_table(contract, contract.value);
+            for (const auto &item : up_banker_table) {
+                if (item.state == state1 || item.state == state2)
+                    up_banker_list.push_back(item);
+            }
+            return up_banker_list;
+        }
+
         //轮次换庄家更新投资额
-        static bool update(name contract, name user, asset investment) {
+        static bool update(name contract, name user, asset investment, uint32_t state, asset res_amt) {
             bankbulls::up_bankers_index up_bankers_table(contract, contract.value);
             auto itr = up_bankers_table.find(user.value);
             if (itr == up_bankers_table.end()) {
-                check(false, "user not found");
+                check(false, "19user not found");
             }
             up_bankers_table.modify(itr, contract, [&](auto &u) {
                 u.investment = investment;
+                u.state = state;
+                u.res_amt = res_amt;
             });
             return true;
         }
 
         //轮次换庄家更新投资占比，余额等
         static bool update(name contract, name user, asset balance, asset total_divide,
-                           uint32_t created_at, uint64_t bet_ratio, uint64_t start_game_id, uint64_t start_round_id) {
+                           uint32_t created_at, uint64_t bet_ratio, uint64_t start_game_id,
+                           uint64_t start_round_id) {
             bankbulls::up_bankers_index up_bankers_table(contract, contract.value);
             auto itr = up_bankers_table.find(user.value);
             if (itr == up_bankers_table.end()) {
-                check(false, "user not found");
+                check(false, "18user not found");
             }
             up_bankers_table.modify(itr, contract, [&](auto &u) {
                 u.balance = balance;
@@ -376,31 +430,54 @@ namespace models {
         }
 
         //todo:每轮结算更新分红
-        static bool update(name contract, name user, int64_t total_divide_amount) {
+        static bool update(name contract, name user, int64_t total_divide_amount,int64_t next_investment_amount) {
             bankbulls::up_bankers_index up_bankers_table(contract, contract.value);
             auto itr = up_bankers_table.find(user.value);
             if (itr == up_bankers_table.end()) {
-                check(false, "user not found");
+                check(false, "17up_banker user not found when update");
             }
             up_bankers_table.modify(itr, contract, [&](auto &u) {
                 u.total_divide.amount = total_divide_amount;
+                u.investment.amount = next_investment_amount;
             });
             return true;
         }
 
-        /**
-        //todo:系统补庄，更新投资占比
-        static bool update(name contract,name user,uint64_t bet_ratio) {
+        //todo;整合update
+        static bool update(name contract, name user, uint32_t state, string test) {
             bankbulls::up_bankers_index up_bankers_table(contract, contract.value);
             auto itr = up_bankers_table.find(user.value);
             if (itr == up_bankers_table.end()) {
-                check(false,"user not found");
+                check(false, "16up_banker2 user not found when update");
+            }
+            up_bankers_table.modify(itr, contract, [&](auto &u) {
+                u.state = state;
+            });
+            return true;
+        }
+
+        //todo;整合update
+        static bool update(name contract, name user, uint32_t bet_ratio, string test, string test2) {
+            bankbulls::up_bankers_index up_bankers_table(contract, contract.value);
+            auto itr = up_bankers_table.find(user.value);
+            if (itr == up_bankers_table.end()) {
+                check(false, "16up_banker2 user not found when update");
             }
             up_bankers_table.modify(itr, contract, [&](auto &u) {
                 u.bet_ratio = bet_ratio;
             });
             return true;
-        }**/
+        }
+
+        static bankbulls::up_bankers find(name contract, name user) {
+            bankbulls::up_bankers_index up_bankers_table(contract, contract.value);
+            auto itr = up_bankers_table.find(user.value);
+            if (itr == up_bankers_table.end()) {
+                check(false, "15up_banker user not found when update");
+            }
+            bankbulls::up_bankers banker = *itr;
+            return banker;
+        }
 
         static bool is_exist(name contract, name user) {
             bankbulls::up_bankers_index up_bankers_table(contract, contract.value);
@@ -428,7 +505,7 @@ namespace models {
             bankbulls::res_bankers_index res_bankers_table(contract, contract.value);
             auto itr = res_bankers_table.find(user.value);
             if (itr != res_bankers_table.end()) {
-                check(false, "user have been exist already");
+                check(false, "14user have been exist already");
             }
             res_bankers_table.emplace(contract, [&](auto &u) {
                 u.account = user;
@@ -443,8 +520,8 @@ namespace models {
             return true;
         }
 
-        static vector <bankbulls::res_bankers> list(name contract) {
-            vector <bankbulls::res_bankers> res_banker_list = {};
+        static vector<bankbulls::res_bankers> list(name contract) {
+            vector<bankbulls::res_bankers> res_banker_list = {};
             bankbulls::res_bankers_index res_banker_table(contract, contract.value);
             for (const auto &item : res_banker_table) {
                 res_banker_list.push_back(item);
@@ -464,7 +541,7 @@ namespace models {
             bankbulls::res_bankers_index res_bankers_table(contract, contract.value);
             auto itr = res_bankers_table.find(user.value);
             if (itr == res_bankers_table.end()) {
-                check(false, "user not found");
+                check(false, "13user not found");
             }
             res_bankers_table.erase(itr);
             return true;
@@ -477,14 +554,16 @@ namespace models {
     public:
         static bool insert(name contract, uint64_t id, uint64_t cur_game_id, asset player_investment,
                            asset system_investment, asset player_banker_balance, asset system_banker_balance,
-                           asset player_banker_max_bet_amount, asset system_banker_max_bet_amount, asset cur_max_bet,
-                           uint32_t banker_num, asset spades_amt, asset hearts_amt, asset clubs_amt, asset diamonds_amt,
+                           asset player_banker_max_bet_amount, asset system_banker_max_bet_amount,
+                           asset cur_max_bet,
+                           uint32_t banker_num, asset spades_amt, asset hearts_amt, asset clubs_amt,
+                           asset diamonds_amt,
                            asset current_banker_win, asset current_banker_lose, asset banker_win_lose,
                            asset player_banker_bet, uint32_t state, uint32_t created_at, uint32_t stop_at) {
             bankbulls::cur_round_index cur_round_table(contract, contract.value);
             auto itr = cur_round_table.find(id);
             if (itr != cur_round_table.end()) {
-                check(false, "cur_round id have been exist already");
+                check(false, "12cur_round id have been exist already");
             }
             cur_round_table.emplace(contract, [&](auto &u) {
                 u.id = id;                            //PK 自增
@@ -517,8 +596,8 @@ namespace models {
             return true;
         }
 
-        static vector <bankbulls::cur_round> list(name contract) {
-            vector <bankbulls::cur_round> cur_round_list = {};
+        static vector<bankbulls::cur_round> list(name contract) {
+            vector<bankbulls::cur_round> cur_round_list = {};
             bankbulls::cur_round_index cur_round_table(contract, contract.value);
             for (const auto &item : cur_round_table) {
                 cur_round_list.push_back(item);
@@ -531,10 +610,24 @@ namespace models {
             bankbulls::cur_round_index cur_round_table(contract, contract.value);
             auto itr = cur_round_table.find(round_id);
             if (itr == cur_round_table.end()) {
-                check(false, "cur_round not found");
+                check(false, "11cur_round not found");
             }
             cur_round_table.modify(itr, contract, [&](auto &u) {
                 u.cur_game_id = cur_game_id;
+            });
+            return true;
+        }
+
+        //轮次流局，更新状态
+        static bool update(name contract, uint32_t state) {
+            bankbulls::cur_round_index cur_round_table(contract, contract.value);
+            uint32_t round_id = get_last_id(contract);
+            auto itr = cur_round_table.find(round_id);
+            if (itr == cur_round_table.end()) {
+                check(false, "10cur_round not found");
+            }
+            cur_round_table.modify(itr, contract, [&](auto &u) {
+                u.state = state;
             });
             return true;
         }
@@ -545,7 +638,7 @@ namespace models {
             bankbulls::cur_round_index cur_round_table(contract, contract.value);
             auto itr = cur_round_table.find(round_id);
             if (itr == cur_round_table.end()) {
-                check(false, "round_id not found when update");
+                check(false, "9round_id not found when update");
             }
             cur_round_table.modify(itr, contract, [&](auto &u) {
                 u.player_banker_bet.amount += bet_amount.amount;
@@ -564,12 +657,27 @@ namespace models {
             bankbulls::cur_round_index cur_round_table(contract, contract.value);
             auto itr = cur_round_table.find(round_id);
             if (itr == cur_round_table.end()) {
-                check(false, "round_id not found when update");
+                check(false, "8round_id not found when update");
             }
             cur_round_table.modify(itr, contract, [&](auto &u) {
                 u.current_banker_win.amount += current_banker_win_amount;
                 u.current_banker_lose.amount += current_banker_lose_amount;
                 u.banker_win_lose.amount += banker_win_lose_amount;
+            });
+            return true;
+        }
+
+        static bool update(name contract, uint64_t round_id, asset max_bet_asset,
+                           uint32_t banker_num, asset system_investment) {
+            bankbulls::cur_round_index cur_round_table(contract, contract.value);
+            auto itr = cur_round_table.find(round_id);
+            if (itr == cur_round_table.end()) {
+                check(false, "8round_id not found when update");
+            }
+            cur_round_table.modify(itr, contract, [&](auto &u) {
+                u.cur_max_bet = max_bet_asset;
+                u.banker_num = banker_num;
+                u.system_investment = system_investment;
             });
             return true;
         }
@@ -592,14 +700,14 @@ namespace models {
             auto created_at_idx = cur_round_table.get_index<"createdat"_n>();
             auto last_itr = created_at_idx.begin();
             if (last_itr == created_at_idx.end()) {
-                printf("have nothing in table");
+                printf("7have nothing in table");
                 return 0;
             }
             return last_itr->id;
         }
 
-        static vector <bankbulls::cur_round> list_by_created(name contract) {
-            vector <bankbulls::cur_round> cur_round_list = {};
+        static vector<bankbulls::cur_round> list_by_created(name contract) {
+            vector<bankbulls::cur_round> cur_round_list = {};
             bankbulls::cur_round_index cur_round_table(contract, contract.value);
             auto created_at_idx = cur_round_table.get_index<"createdat"_n>();
             for (const auto &item : created_at_idx) {
@@ -638,7 +746,7 @@ namespace models {
             bankbulls::his_rounds_index his_rounds_table(contract, contract.value);
             auto itr = his_rounds_table.find(id);
             if (itr != his_rounds_table.end()) {
-                check(false, "round id is already exist");
+                check(false, "6round id is already exist");
             }
             his_rounds_table.emplace(contract, [&](auto &u) {
                 u.id = id;
@@ -676,13 +784,13 @@ namespace models {
             return true;
         }
 
-        static vector <bankbulls::his_rounds> get_last(name account) {
+        static vector<bankbulls::his_rounds> get_last(name account) {
             bankbulls::his_rounds_index his_rounds_table(account, account.value);
             auto created_at_idx = his_rounds_table.get_index<"createdat"_n>();
-            vector <bankbulls::his_rounds> rounds;
+            vector<bankbulls::his_rounds> rounds;
             auto last_itr = created_at_idx.begin();
             if (last_itr == created_at_idx.end()) {
-                printf("have nothing in table");
+                printf("5have nothing in table");
                 return {};
             }
             rounds.push_back(*last_itr);
@@ -693,15 +801,33 @@ namespace models {
 
     class logs {
     public:
-        static bool insert(name contract,string data) {
+        static bool insert(name contract, string data, uint64_t id) {
 
-            vector<bankbulls::logs> logs = list(contract);
-            uint64_t id =  logs.size() == 0 ? 1 : logs[0].id + 1;
+            //vector<bankbulls::logs> logs = list(contract);
+            //uint64_t id =  logs.size() == 0 ? 1 : logs[0].id + 1;
 
             bankbulls::logs_index logs_table(contract, contract.value);
             auto itr = logs_table.find(id);
             if (itr != logs_table.end()) {
-                check(false, "logs id is already exist");
+                check(false, "4logs id is already exist");
+            }
+            logs_table.emplace(contract, [&](auto &u) {
+                u.id = id;
+                u.data = data;
+            });
+            return true;
+        }
+
+
+        static bool insert(name contract, string data) {
+
+            vector<bankbulls::logs> logs = list(contract);
+            uint64_t id = logs.size() == 0 ? 1 : logs[0].id + 1;
+
+            bankbulls::logs_index logs_table(contract, contract.value);
+            auto itr = logs_table.find(id);
+            if (itr != logs_table.end()) {
+                check(false, "3logs id is already exist");
             }
             logs_table.emplace(contract, [&](auto &u) {
                 u.id = id;
@@ -718,9 +844,9 @@ namespace models {
             return true;
         }
 
-        static vector <bankbulls::logs> list(name contract) {
+        static vector<bankbulls::logs> list(name contract) {
             bankbulls::logs_index logs_table(contract, contract.value);
-            vector <bankbulls::logs> logs = {};
+            vector<bankbulls::logs> logs = {};
             auto last_itr = logs_table.begin();
             for (const auto &item : logs_table) {
                 logs.push_back(item);
@@ -732,20 +858,35 @@ namespace models {
 
     class logs2 {
     public:
-        static bool insert(name contract,string data) {
-
-            vector<bankbulls::logs2> logs = list(contract);
-            uint64_t id =  logs.size() == 0 ? 1 : logs[0].id + 1;
-
+        static bool insert(name contract, string data, uint64_t id) {
             bankbulls::logs2_index logs_table(contract, contract.value);
             auto itr = logs_table.find(id);
             if (itr != logs_table.end()) {
-                check(false, "logs id is already exist");
+                check(false, "2logs id is already exist");
             }
             logs_table.emplace(contract, [&](auto &u) {
                 u.id = id;
                 u.data = data;
             });
+            return true;
+        }
+
+        static bool insert(name contract, string data) {
+            bankbulls::global_state last_logs2_id = global_state::find(contract, name(LAST_LOGS2_ID_KEY_NAME));
+            uint64_t id = strtoull(last_logs2_id.value.c_str(), NULL, 0) + 1;
+
+            bankbulls::logs2_index logs_table(contract, contract.value);
+            auto itr = logs_table.find(id);
+            if (itr != logs_table.end()) {
+                check(false, "1logs id is already exist");
+            }
+            logs_table.emplace(contract, [&](auto &u) {
+                u.id = id;
+                u.data = data;
+            });
+
+            models::global_state::update(contract, name(LAST_LOGS2_ID_KEY_NAME), to_string(id));
+
             return true;
         }
 
@@ -757,9 +898,9 @@ namespace models {
             return true;
         }
 
-        static vector <bankbulls::logs2> list(name contract) {
+        static vector<bankbulls::logs2> list(name contract) {
             bankbulls::logs2_index logs_table(contract, contract.value);
-            vector <bankbulls::logs2> logs = {};
+            vector<bankbulls::logs2> logs = {};
             auto last_itr = logs_table.begin();
             for (const auto &item : logs_table) {
                 logs.push_back(item);

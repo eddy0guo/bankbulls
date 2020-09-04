@@ -1,0 +1,966 @@
+{
+    "____comment": "This file was generated with eosio-abigen. DO NOT EDIT ",
+    "version": "eosio::abi/1.1",
+    "types": [],
+    "structs": [
+        {
+            "name": "bets",
+            "base": "",
+            "fields": [
+                {
+                    "name": "id",
+                    "type": "uint64"
+                },
+                {
+                    "name": "game_id",
+                    "type": "uint64"
+                },
+                {
+                    "name": "player",
+                    "type": "name"
+                },
+                {
+                    "name": "bet_amount",
+                    "type": "asset"
+                },
+                {
+                    "name": "spades_amt",
+                    "type": "asset"
+                },
+                {
+                    "name": "hearts_amt",
+                    "type": "asset"
+                },
+                {
+                    "name": "clubs_amt",
+                    "type": "asset"
+                },
+                {
+                    "name": "diamonds_amt",
+                    "type": "asset"
+                },
+                {
+                    "name": "created_at",
+                    "type": "int32"
+                },
+                {
+                    "name": "tx_id",
+                    "type": "checksum256"
+                },
+                {
+                    "name": "state",
+                    "type": "uint32"
+                }
+            ]
+        },
+        {
+            "name": "cancelgame",
+            "base": "",
+            "fields": []
+        },
+        {
+            "name": "cancelround",
+            "base": "",
+            "fields": []
+        },
+        {
+            "name": "canceltrx",
+            "base": "",
+            "fields": [
+                {
+                    "name": "player",
+                    "type": "name"
+                }
+            ]
+        },
+        {
+            "name": "cur_round",
+            "base": "",
+            "fields": [
+                {
+                    "name": "id",
+                    "type": "uint64"
+                },
+                {
+                    "name": "cur_game_id",
+                    "type": "uint64"
+                },
+                {
+                    "name": "player_investment",
+                    "type": "asset"
+                },
+                {
+                    "name": "system_investment",
+                    "type": "asset"
+                },
+                {
+                    "name": "player_banker_balance",
+                    "type": "asset"
+                },
+                {
+                    "name": "system_banker_balance",
+                    "type": "asset"
+                },
+                {
+                    "name": "player_banker_max_bet_amount",
+                    "type": "asset"
+                },
+                {
+                    "name": "system_banker_max_bet_amount",
+                    "type": "asset"
+                },
+                {
+                    "name": "cur_max_bet",
+                    "type": "asset"
+                },
+                {
+                    "name": "banker_num",
+                    "type": "uint32"
+                },
+                {
+                    "name": "spades_amt",
+                    "type": "asset"
+                },
+                {
+                    "name": "hearts_amt",
+                    "type": "asset"
+                },
+                {
+                    "name": "clubs_amt",
+                    "type": "asset"
+                },
+                {
+                    "name": "diamonds_amt",
+                    "type": "asset"
+                },
+                {
+                    "name": "current_banker_win",
+                    "type": "asset"
+                },
+                {
+                    "name": "current_banker_lose",
+                    "type": "asset"
+                },
+                {
+                    "name": "banker_win_lose",
+                    "type": "asset"
+                },
+                {
+                    "name": "player_banker_bet",
+                    "type": "asset"
+                },
+                {
+                    "name": "state",
+                    "type": "uint32"
+                },
+                {
+                    "name": "created_at",
+                    "type": "uint32"
+                },
+                {
+                    "name": "stop_at",
+                    "type": "uint32"
+                }
+            ]
+        },
+        {
+            "name": "delstate",
+            "base": "",
+            "fields": [
+                {
+                    "name": "key",
+                    "type": "string"
+                }
+            ]
+        },
+        {
+            "name": "game",
+            "base": "",
+            "fields": [
+                {
+                    "name": "id",
+                    "type": "uint64"
+                },
+                {
+                    "name": "sign",
+                    "type": "string"
+                },
+                {
+                    "name": "public_key",
+                    "type": "string"
+                },
+                {
+                    "name": "state",
+                    "type": "uint32"
+                },
+                {
+                    "name": "dealer_hand_number",
+                    "type": "uint32"
+                },
+                {
+                    "name": "dealer_card",
+                    "type": "string"
+                },
+                {
+                    "name": "spades_card",
+                    "type": "string"
+                },
+                {
+                    "name": "hearts_card",
+                    "type": "string"
+                },
+                {
+                    "name": "clubs_card",
+                    "type": "string"
+                },
+                {
+                    "name": "diamonds_card",
+                    "type": "string"
+                },
+                {
+                    "name": "spades_result",
+                    "type": "int32"
+                },
+                {
+                    "name": "hearts_result",
+                    "type": "int32"
+                },
+                {
+                    "name": "clubs_result",
+                    "type": "int32"
+                },
+                {
+                    "name": "diamonds_result",
+                    "type": "int32"
+                },
+                {
+                    "name": "reveal_at",
+                    "type": "uint32"
+                },
+                {
+                    "name": "created_at",
+                    "type": "uint64"
+                },
+                {
+                    "name": "stop_at",
+                    "type": "uint64"
+                },
+                {
+                    "name": "block_index",
+                    "type": "uint64"
+                },
+                {
+                    "name": "block_hash",
+                    "type": "string"
+                },
+                {
+                    "name": "seed",
+                    "type": "string"
+                },
+                {
+                    "name": "wash_hash",
+                    "type": "string"
+                },
+                {
+                    "name": "start_txid",
+                    "type": "string"
+                },
+                {
+                    "name": "open_txid",
+                    "type": "string"
+                }
+            ]
+        },
+        {
+            "name": "getdelay",
+            "base": "",
+            "fields": [
+                {
+                    "name": "player",
+                    "type": "string"
+                },
+                {
+                    "name": "value",
+                    "type": "uint32"
+                }
+            ]
+        },
+        {
+            "name": "global_state",
+            "base": "",
+            "fields": [
+                {
+                    "name": "key",
+                    "type": "name"
+                },
+                {
+                    "name": "value",
+                    "type": "string"
+                }
+            ]
+        },
+        {
+            "name": "his_rounds",
+            "base": "",
+            "fields": [
+                {
+                    "name": "id",
+                    "type": "uint64"
+                },
+                {
+                    "name": "start_game_id",
+                    "type": "uint64"
+                },
+                {
+                    "name": "end_game_id",
+                    "type": "uint64"
+                },
+                {
+                    "name": "bank_investment",
+                    "type": "asset"
+                },
+                {
+                    "name": "bank_balance",
+                    "type": "asset"
+                },
+                {
+                    "name": "bank_profit",
+                    "type": "asset"
+                },
+                {
+                    "name": "sys_investment",
+                    "type": "asset"
+                },
+                {
+                    "name": "sys_balance",
+                    "type": "asset"
+                },
+                {
+                    "name": "sys_profit",
+                    "type": "asset"
+                },
+                {
+                    "name": "created_at",
+                    "type": "uint64"
+                },
+                {
+                    "name": "end_time",
+                    "type": "uint64"
+                }
+            ]
+        },
+        {
+            "name": "logs",
+            "base": "",
+            "fields": [
+                {
+                    "name": "id",
+                    "type": "uint64"
+                },
+                {
+                    "name": "data",
+                    "type": "string"
+                }
+            ]
+        },
+        {
+            "name": "logs2",
+            "base": "",
+            "fields": [
+                {
+                    "name": "id",
+                    "type": "uint64"
+                },
+                {
+                    "name": "data",
+                    "type": "string"
+                }
+            ]
+        },
+        {
+            "name": "opencards",
+            "base": "",
+            "fields": [
+                {
+                    "name": "sign",
+                    "type": "string"
+                },
+                {
+                    "name": "seed",
+                    "type": "checksum256"
+                },
+                {
+                    "name": "block_index",
+                    "type": "uint64"
+                },
+                {
+                    "name": "block_hash",
+                    "type": "string"
+                }
+            ]
+        },
+        {
+            "name": "record",
+            "base": "",
+            "fields": [
+                {
+                    "name": "game_id",
+                    "type": "uint64"
+                },
+                {
+                    "name": "state",
+                    "type": "uint32"
+                },
+                {
+                    "name": "dealer_hand_number",
+                    "type": "uint32"
+                },
+                {
+                    "name": "dealer_card",
+                    "type": "string"
+                },
+                {
+                    "name": "spades_card",
+                    "type": "string"
+                },
+                {
+                    "name": "hearts_card",
+                    "type": "string"
+                },
+                {
+                    "name": "clubs_card",
+                    "type": "string"
+                },
+                {
+                    "name": "diamonds_card",
+                    "type": "string"
+                },
+                {
+                    "name": "spades_result",
+                    "type": "int32"
+                },
+                {
+                    "name": "hearts_result",
+                    "type": "int32"
+                },
+                {
+                    "name": "clubs_result",
+                    "type": "int32"
+                },
+                {
+                    "name": "diamonds_result",
+                    "type": "int32"
+                },
+                {
+                    "name": "reveal_at",
+                    "type": "uint32"
+                },
+                {
+                    "name": "created_at",
+                    "type": "uint32"
+                },
+                {
+                    "name": "block_index",
+                    "type": "uint64"
+                },
+                {
+                    "name": "block_hash",
+                    "type": "string"
+                },
+                {
+                    "name": "seed",
+                    "type": "string"
+                },
+                {
+                    "name": "seed_sign",
+                    "type": "string"
+                },
+                {
+                    "name": "wash_hash",
+                    "type": "string"
+                }
+            ]
+        },
+        {
+            "name": "res_bankers",
+            "base": "",
+            "fields": [
+                {
+                    "name": "account",
+                    "type": "name"
+                },
+                {
+                    "name": "investment",
+                    "type": "asset"
+                },
+                {
+                    "name": "action",
+                    "type": "uint32"
+                },
+                {
+                    "name": "created_at",
+                    "type": "uint32"
+                }
+            ]
+        },
+        {
+            "name": "resbank",
+            "base": "",
+            "fields": [
+                {
+                    "name": "account",
+                    "type": "name"
+                },
+                {
+                    "name": "investment",
+                    "type": "asset"
+                },
+                {
+                    "name": "action",
+                    "type": "uint64"
+                }
+            ]
+        },
+        {
+            "name": "reveal",
+            "base": "",
+            "fields": [
+                {
+                    "name": "game_id",
+                    "type": "uint64"
+                },
+                {
+                    "name": "player",
+                    "type": "name"
+                },
+                {
+                    "name": "dealer_hand_number",
+                    "type": "uint32"
+                },
+                {
+                    "name": "dealer_card",
+                    "type": "string"
+                },
+                {
+                    "name": "spades_card",
+                    "type": "string"
+                },
+                {
+                    "name": "hearts_card",
+                    "type": "string"
+                },
+                {
+                    "name": "clubs_card",
+                    "type": "string"
+                },
+                {
+                    "name": "diamonds_card",
+                    "type": "string"
+                },
+                {
+                    "name": "spades_amt",
+                    "type": "asset"
+                },
+                {
+                    "name": "hearts_amt",
+                    "type": "asset"
+                },
+                {
+                    "name": "clubs_amt",
+                    "type": "asset"
+                },
+                {
+                    "name": "diamonds_amt",
+                    "type": "asset"
+                },
+                {
+                    "name": "bet_amount",
+                    "type": "asset"
+                },
+                {
+                    "name": "payout_spades",
+                    "type": "asset"
+                },
+                {
+                    "name": "payout_hearts",
+                    "type": "asset"
+                },
+                {
+                    "name": "payout_clubs",
+                    "type": "asset"
+                },
+                {
+                    "name": "payout_diamonds",
+                    "type": "asset"
+                },
+                {
+                    "name": "reveal_at",
+                    "type": "uint32"
+                },
+                {
+                    "name": "seed",
+                    "type": "string"
+                },
+                {
+                    "name": "seed_sign",
+                    "type": "string"
+                },
+                {
+                    "name": "public_key",
+                    "type": "string"
+                },
+                {
+                    "name": "block_id",
+                    "type": "uint64"
+                },
+                {
+                    "name": "block_hash",
+                    "type": "string"
+                }
+            ]
+        },
+        {
+            "name": "setstate",
+            "base": "",
+            "fields": [
+                {
+                    "name": "key",
+                    "type": "string"
+                },
+                {
+                    "name": "value",
+                    "type": "string"
+                }
+            ]
+        },
+        {
+            "name": "sltgame",
+            "base": "",
+            "fields": [
+                {
+                    "name": "dispose_count",
+                    "type": "uint32"
+                },
+                {
+                    "name": "count",
+                    "type": "int32"
+                }
+            ]
+        },
+        {
+            "name": "sltround",
+            "base": "",
+            "fields": [
+                {
+                    "name": "dispose_count",
+                    "type": "int32"
+                },
+                {
+                    "name": "count",
+                    "type": "uint32"
+                }
+            ]
+        },
+        {
+            "name": "startbet",
+            "base": "",
+            "fields": [
+                {
+                    "name": "block_index",
+                    "type": "uint64"
+                },
+                {
+                    "name": "sign",
+                    "type": "string"
+                },
+                {
+                    "name": "pubkey",
+                    "type": "string"
+                }
+            ]
+        },
+        {
+            "name": "startround",
+            "base": "",
+            "fields": []
+        },
+        {
+            "name": "stopbet",
+            "base": "",
+            "fields": []
+        },
+        {
+            "name": "tableclear",
+            "base": "",
+            "fields": [
+                {
+                    "name": "table",
+                    "type": "string"
+                }
+            ]
+        },
+        {
+            "name": "testdelay",
+            "base": "",
+            "fields": []
+        },
+        {
+            "name": "testdelaya",
+            "base": "",
+            "fields": []
+        },
+        {
+            "name": "testdelayb",
+            "base": "",
+            "fields": [
+                {
+                    "name": "count",
+                    "type": "int64"
+                }
+            ]
+        },
+        {
+            "name": "testdelayc",
+            "base": "",
+            "fields": []
+        },
+        {
+            "name": "testsign",
+            "base": "",
+            "fields": [
+                {
+                    "name": "house_seed_hash",
+                    "type": "checksum256"
+                },
+                {
+                    "name": "sig",
+                    "type": "signature"
+                },
+                {
+                    "name": "pubkey",
+                    "type": "public_key"
+                }
+            ]
+        },
+        {
+            "name": "up_bankers",
+            "base": "",
+            "fields": [
+                {
+                    "name": "account",
+                    "type": "name"
+                },
+                {
+                    "name": "investment",
+                    "type": "asset"
+                },
+                {
+                    "name": "balance",
+                    "type": "asset"
+                },
+                {
+                    "name": "total_divide",
+                    "type": "asset"
+                },
+                {
+                    "name": "created_at",
+                    "type": "uint32"
+                },
+                {
+                    "name": "bet_ratio",
+                    "type": "uint64"
+                },
+                {
+                    "name": "start_game_id",
+                    "type": "uint64"
+                },
+                {
+                    "name": "start_round_id",
+                    "type": "uint64"
+                },
+                {
+                    "name": "state",
+                    "type": "uint32"
+                },
+                {
+                    "name": "res_amt",
+                    "type": "asset"
+                }
+            ]
+        }
+    ],
+    "actions": [
+        {
+            "name": "cancelgame",
+            "type": "cancelgame",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "cancelround",
+            "type": "cancelround",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "canceltrx",
+            "type": "canceltrx",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "delstate",
+            "type": "delstate",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "getdelay",
+            "type": "getdelay",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "opencards",
+            "type": "opencards",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "record",
+            "type": "record",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "resbank",
+            "type": "resbank",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "reveal",
+            "type": "reveal",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "setstate",
+            "type": "setstate",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "sltgame",
+            "type": "sltgame",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "sltround",
+            "type": "sltround",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "startbet",
+            "type": "startbet",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "startround",
+            "type": "startround",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "stopbet",
+            "type": "stopbet",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "tableclear",
+            "type": "tableclear",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "testdelay",
+            "type": "testdelay",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "testdelaya",
+            "type": "testdelaya",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "testdelayb",
+            "type": "testdelayb",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "testdelayc",
+            "type": "testdelayc",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "testsign",
+            "type": "testsign",
+            "ricardian_contract": ""
+        }
+    ],
+    "tables": [
+        {
+            "name": "bets2",
+            "type": "bets",
+            "index_type": "i64",
+            "key_names": [],
+            "key_types": []
+        },
+        {
+            "name": "curround",
+            "type": "cur_round",
+            "index_type": "i64",
+            "key_names": [],
+            "key_types": []
+        },
+        {
+            "name": "games",
+            "type": "game",
+            "index_type": "i64",
+            "key_names": [],
+            "key_types": []
+        },
+        {
+            "name": "globalstate3",
+            "type": "global_state",
+            "index_type": "i64",
+            "key_names": [],
+            "key_types": []
+        },
+        {
+            "name": "hisrounds",
+            "type": "his_rounds",
+            "index_type": "i64",
+            "key_names": [],
+            "key_types": []
+        },
+        {
+            "name": "logs",
+            "type": "logs",
+            "index_type": "i64",
+            "key_names": [],
+            "key_types": []
+        },
+        {
+            "name": "logs2",
+            "type": "logs2",
+            "index_type": "i64",
+            "key_names": [],
+            "key_types": []
+        },
+        {
+            "name": "resbankers",
+            "type": "res_bankers",
+            "index_type": "i64",
+            "key_names": [],
+            "key_types": []
+        },
+        {
+            "name": "upbankers",
+            "type": "up_bankers",
+            "index_type": "i64",
+            "key_names": [],
+            "key_types": []
+        }
+    ],
+    "ricardian_clauses": [],
+    "variants": []
+}
