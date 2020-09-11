@@ -37,6 +37,7 @@ using namespace std;
 //fixme:放进设置项还没给join说
 #define MIN_INCREASE_KEY_NAME "minplusbank"
 #define MIN_REDUCE_KEY_NAME "minminusbank"
+#define SETTLEMENT_SIZE_KEY_NAME "sltsize"
 
 //组合type,组合名称,最大点数，最大点数对应的花色，赔率，
 typedef std::tuple<uint32_t, string, uint32_t, uint32_t, uint32_t> ALLOCATION_INFO;

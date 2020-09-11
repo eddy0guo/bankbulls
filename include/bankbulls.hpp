@@ -54,7 +54,7 @@ public:
     //[[eosio::on_notify("eosio.token::transfer")]]
     [[eosio::action]] void sltgame(uint32_t dispose_count, int32_t count);
 
-    [[eosio::action]] void sltround(int32_t dispose_count, uint32_t count);
+    [[eosio::action]] void sltround(int32_t dispose_count);
 
     [[eosio::action]] void startround();
 
@@ -310,6 +310,7 @@ public:
 
 //默认值参考文档
 const vector<bankbulls::global_state> SETTING_KEYS_DEFAULT = {
+        {name(SETTLEMENT_SIZE_KEY_NAME),   "20"},
         {name(TIME_STOP_KEY_NAME),         "25"},
         {name(TIME_GAME_KEY_NAME),         "45"},
         {name(TIME_ROUND_KEY_NAME),        "720"},

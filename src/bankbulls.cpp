@@ -12,30 +12,24 @@ using namespace eosio;
 using namespace std;
 
 //todo:action入口参数的合法性以及权限控制
-//todo:下注总额小于千分之1.5,bets表中当前局的总额超过1.5%，后续的下注就失败掉
 //todo:models里面大量的contract换成在hpp里面的getself（）
 //todo:所有入函数,需要判断状态的都要加上
 //todo：上庄稀释费
 //todo:关于stop时间的控制
-//todo:各个表的条目限制
 //todo::如果当前局结算没完成就进行下一局，那么log就不在打印，log只输出当前局的
 //todo::本轮结算日志,轮次结算要判断当前轮次的情况是流局状态还是进行中
-//fixme::轮次流局后的轮次结算看着和正常的一样，不需要做额外的逻辑，
 //todo::派彩事件放在startround里面进行
 //fixme::流轮次之前，应该先流轮次？
 //todo:bets表同时入块导致的created相同的问题
 //todo:统一日志等asset还是int类型
-//todo::stop bet的时候判断是否需要补妆
-//todo::取消的时候，不更新bets玩家的状态直接删掉,下注表结算之后就清掉
 //todo::抽牌异常处理：进行5轮后，还没抽齐，则跳出，该局取消，退还所有。
 //todo::下庄的金额其实只是摆设
 //todo::按照文档流程方案改为延时的，然后逻辑上严格控制（状态时间等），考虑ddos，黑名单攻击等可能的情况
 //todo::延时任务最后参数（是否替代的）谨慎使用
 //todo::延时交易的到账确认-下版本
-//todo::延时720和25秒放在设置项
-//todo::再封装一层获取设置值，返回数值类型
-// 设置参数
+//todo::每次结算金额小于等于20
 
+// 设置参数
 void bankbulls::setstate(string key, string value) {
     name finger_official = get_self();
     require_auth(finger_official);
@@ -43,12 +37,17 @@ void bankbulls::setstate(string key, string value) {
     check(exist_result, "invalid settings key");
 
     vector<bankbulls::cur_round> cur_round_list = models::cur_round::list(finger_official);
-    int64_t investment_amt = cur_round_list[0].player_investment.amount;
-    if ((key == LIMIT_PLAY_BANK_KEY_NAME && investment_amt > 0) ||
-        (key == LIMIT_SYSTEM_BANK_KEY_NAME && investment_amt == 0)) {
-        int64_t cur_max_bet = strtoll(value.c_str(), NULL, 0);
-        string limit_info = game_limit_json(cur_round_list[0].id, cur_max_bet, cur_round_list[0].state);
-        models::logs::insert(finger_official, limit_info);
+    if(cur_round_list.size() > 0){
+        int64_t investment_amt = cur_round_list[0].player_investment.amount;
+        if ((key == LIMIT_PLAY_BANK_KEY_NAME && investment_amt > 0) ||
+            (key == LIMIT_SYSTEM_BANK_KEY_NAME && investment_amt == 0)) {
+            int64_t cur_max_bet = strtoll(value.c_str(), NULL, 0);
+            string limit_info = game_limit_json(cur_round_list[0].id, cur_max_bet, cur_round_list[0].state);
+            models::logs::insert(finger_official, limit_info);
+        }
+    }
+    if(key == SETTLEMENT_SIZE_KEY_NAME){
+        check(strtoull(value.c_str(), NULL, 0) <= 20,"settlement size must be less than 20");
     }
 
     bool key_exist = models::global_state::is_exist(finger_official, name(key));
@@ -84,6 +83,7 @@ void bankbulls::bet(name user, name to, asset quantity, string memo) {
     //name action ,
     uint64_t game_id = stoull(params[1]);
     vector<bankbulls::game> games = models::game::list_by_created(finger_official);
+    check(games.size() > 0,"Any game have n't start ?");
     check(game_id == games[0].id, "The params game id is difference current id" + uint_string(games[0].id));
     check(games[0].state == start_bet_game_state, "this bet is over,please wait next");
 
@@ -133,7 +133,6 @@ void bankbulls::bet(name user, name to, asset quantity, string memo) {
 // 开局
 /*
  * 开局: startbet
-todo: 配置项1.停止下注秒数stop_time = 25S
 2.未来开牌区块号: cur_block + 27* 2, 1秒增长2个高度
 3.随机seed并进行签名sign
 GNow = RNow + 6
@@ -144,18 +143,25 @@ void bankbulls::startbet(uint64_t block_index, string sign, string public_key) {
     name finger_official = get_self();
     require_auth(finger_official);
     uint64_t balance = get_account_balance(finger_official);
-    //todo::状态大于3不然报错
-    //系统余额不足的清理停掉该局游戏
-    bankbulls::global_state limit_system_bank = models::global_state::find(finger_official,
-                                                                           name(LIMIT_SYSTEM_BANK_KEY_NAME));
-    uint64_t limit_system_bank_amount = strtoull(limit_system_bank.value.c_str(), NULL, 0);
+    //系统余额不足的清理停掉该局游戏x
+    uint64_t limit_system_bank_amount = get_settings_value(finger_official,LIMIT_SYSTEM_BANK_KEY_NAME);
     if (balance < 20 * limit_system_bank_amount) {
         check(false, "The system balance is not enough to start the game ");
     }
+
+    vector<bankbulls::game> last_games = models::game::list_by_created(finger_official);
+    if(last_games.size() > 0){
+        //状态大于3不然报错
+        check(last_games[0].state >= open_card_game_state,"new game must behind last game open card");
+    }
+    if(last_games.size() >= 100){
+        models::game::remove(finger_official,last_games[0].id - 99);
+    }
+
     // todo: sign合法性检查和block_index
     uint32_t created_at = current_time_point().sec_since_epoch();
     uint32_t stop_at = created_at + 25;
-    uint64_t last_game_id = models::game::get_last_id(finger_official);
+    uint64_t last_game_id = last_games.size() == 0 ? 0 : last_games[0].id;
     vector<bankbulls::cur_round> cur_rounds = models::cur_round::list_by_created(finger_official);
     check(cur_rounds.size() == 1, "curound have been created before start bet");
     uint64_t last_round_id = cur_rounds[0].id;
@@ -192,14 +198,9 @@ void bankbulls::startbet(uint64_t block_index, string sign, string public_key) {
     printf("  *%s*   ", game_info_json.data());
     models::logs::insert(finger_official, game_info_json, logs_id);
 
-    //todo:25
-    /**
-    uint64_t result_id = cancel_deferred(STOP_BET_SID);
-    if (result_id == 0) { printf("%s", "交易没有发现"); };
-    if (result_id == 1) { printf("%s", "交易取消成功"); };
-     **/
+    uint64_t delay_stop = get_settings_value(finger_official,TIME_STOP_KEY_NAME);
     delay_call_action(finger_official, finger_official, name("stopbet"),
-                      std::make_tuple(), 25, STOP_BET_SID);
+                      std::make_tuple(), delay_stop, STOP_BET_SID);
 
     return;
 }
@@ -227,6 +228,7 @@ void bankbulls::stopbet() {
     require_auth(finger_official);
     vector<bankbulls::game> games = models::game::list_by_created(finger_official);
     //last_game_id必须是下注中
+    check(games.size() > 0,"Any game have n't start?");
     check(games[0].state == start_bet_game_state,"can stop game behind start start");
     models::game::update(finger_official, games[0].id, stop_bet_game_state);
     bankbulls::game last_game = models::game::find(finger_official, games[0].id);
@@ -250,17 +252,19 @@ void bankbulls::opencards(string sign_str, checksum256 seed, uint64_t block_inde
     //todo:检查时间是否小于stopat，状态是否改为停止下注
     //todo:block_index和block_hash的对应关系
     name finger_official = get_self();
+    int64_t settlement_size = get_settings_value(finger_official,SETTLEMENT_SIZE_KEY_NAME);
     require_auth(finger_official);
     string seed_str = sha256_to_hex(seed);
 
-    vector<bankbulls::game> game_list = models::game::list_by_created(finger_official);
-    check(game_list[0].state == stop_bet_game_state,"opencards must behind stop bet2");
-    const public_key pub_key = str_to_pub(game_list[0].public_key);
+    vector<bankbulls::game> games = models::game::list_by_created(finger_official);
+    check(games.size() > 0,"Any game have n't start ?");
+    check(games[0].state == stop_bet_game_state,"opencards must behind stop bet2");
+    const public_key pub_key = str_to_pub(games[0].public_key);
     const signature sign = str_to_sig(sign_str);
     eosio::assert_recover_key(seed, sign, pub_key);
 
     //fixme:更新下注表所有玩家的状态?还是结算开始的时候结算
-    uint64_t last_game_id = game_list[0].id;
+    uint64_t last_game_id = games[0].id;
     bankbulls::bets_index bets_table(finger_official, finger_official.value);
     auto game_id_index = bets_table.get_index<"gameid"_n>();
     auto itr = game_id_index.find(last_game_id);
@@ -289,13 +293,14 @@ void bankbulls::opencards(string sign_str, checksum256 seed, uint64_t block_inde
     //计算庄和手牌顺序,排序后，下标0为庄，其他依次为黑红梅方的闲家
     char sort_char = sort_allocations(cards_allocations, block_hash);
     // printf("   nnn=%s--   ", cards_allocations.to_json().data());
-    //todo::庄的牌型和闲家牌型比输赢,然后更新到game表和区块中
+    //庄的牌型和闲家牌型比输赢,然后更新到game表和区块中
     vector<string> allocations_log_info = flush_cards_allocations_to_table(finger_official, cards_allocations,
                                                                            wash_result, block_hash, sort_char);
     flush_cards_allocations_to_block(finger_official);
+    /**
     for (const auto &item : allocations_log_info) {
         printf("   %s   ", item.data());
-    }
+    }**/
     string game_info = game_result_json(last_game_id, open_card_game_state, seed_str, wash_result,
                                         block_index, block_hash, allocations_log_info[0],
                                         allocations_log_info[1], allocations_log_info[2],
@@ -303,7 +308,7 @@ void bankbulls::opencards(string sign_str, checksum256 seed, uint64_t block_inde
     models::logs::insert(finger_official, game_info);
 
     delay_call_action(finger_official, finger_official, name("sltgame"),
-                      std::make_tuple(20, last_game_id), 1, SLT_GAME_SID);
+                      std::make_tuple(settlement_size, last_game_id), 1, SLT_GAME_SID);
     return;
 }
 
@@ -312,9 +317,10 @@ void bankbulls::opencards(string sign_str, checksum256 seed, uint64_t block_inde
 void bankbulls::sltgame(uint32_t dispose_count, int32_t game_id) {
     name finger_official = get_self();
     require_auth(finger_official);
+    int64_t settlement_size = get_settings_value(finger_official,SETTLEMENT_SIZE_KEY_NAME);
     //如果系统没坐庄，若某局投注总额＞玩家庄池*1.5%，为不影响大额玩家体验，系统将参与补庄，并与玩家庄按份额共担盈亏。
     //待测试
-    check(dispose_count <= 20, "dispose_count must be less than 20 eos");
+    check(dispose_count <= settlement_size, "dispose_count must be less than 20 eos");
     int64_t sum_bets_amt = 0;
     vector<bankbulls::cur_round> cur_rounds = models::cur_round::list_by_created(finger_official);
     check(cur_rounds.size() > 0, "cur_rounds size can be less than zero");
@@ -342,11 +348,10 @@ void bankbulls::sltgame(uint32_t dispose_count, int32_t game_id) {
 //8.7.1 轮次结算
 // settlement 缩写为slt
 //todo::dispose_count 用起来
-void bankbulls::sltround(int32_t dispose_count, uint32_t count) {
+void bankbulls::sltround(int32_t dispose_count) {
     name finger_official = get_self();
     require_auth(finger_official);
-    bankbulls::global_state min_down_bank = models::global_state::find(finger_official, name(MIN_DOWN_BANK_KEY_NAME));
-    uint64_t min_down_bank_amount = strtoull(min_down_bank.value.c_str(), NULL, 0);
+    uint64_t min_down_bank_amount = get_settings_value(finger_official, MIN_DOWN_BANK_KEY_NAME);
     asset min_down_bank_asset = asset(min_down_bank_amount, EOS_SYMBOL);
     printf("start sltround");
     vector<bankbulls::up_bankers> up_bankers_list =
@@ -404,7 +409,7 @@ void bankbulls::sltround(int32_t dispose_count, uint32_t count) {
     } else {
         //轮次结算进行中
         printf("settlementing...");
-        delay_call_action(finger_official, finger_official, name("sltround"), std::make_tuple(20, 1), 1, SLT_ROUND_SID);
+        delay_call_action(finger_official, finger_official, name("sltround"), std::make_tuple(dispose_count), 1, SLT_ROUND_SID);
     }
     return;
 }
@@ -423,6 +428,7 @@ void bankbulls::startround() {
     //todo:冗余判断下所以的upbanker状态必须为1，
     vector<bankbulls::up_bankers> up_bankers_list = models::up_bankers::list(finger_official);
     vector<bankbulls::cur_round> cur_round_list = models::cur_round::list(finger_official);
+    int64_t settlement_size = get_settings_value(finger_official,SETTLEMENT_SIZE_KEY_NAME);
     uint64_t last_round_id;
 
     //创世轮次
@@ -483,9 +489,10 @@ void bankbulls::startround() {
     //轮次开始日志
     string round_start_info = round_begin_json(last_curround_id + 1, ongoing_round_state);
     models::logs::insert(finger_official, round_start_info);
-    delay_call_action(finger_official, finger_official, name("startround"), std::make_tuple(), 120, START_ROUND_SID);
-    //1没用
-    delay_call_action(finger_official, finger_official, name("sltround"), std::make_tuple(20, 1), 1, SLT_ROUND_SID);
+
+    uint64_t delay_start_round = get_settings_value(finger_official,TIME_ROUND_KEY_NAME);
+    delay_call_action(finger_official, finger_official, name("startround"), std::make_tuple(), delay_start_round, START_ROUND_SID);
+    delay_call_action(finger_official, finger_official, name("sltround"), std::make_tuple(settlement_size, 1), 1, SLT_ROUND_SID);
     return;
 }
 
@@ -510,18 +517,13 @@ void bankbulls::resbank(name account, asset investment, uint64_t action) {
 
     name finger_official = get_self();
     uint32_t created_at = current_time_point().sec_since_epoch();
-    bankbulls::global_state min_up_amount = models::global_state::find(finger_official, name(MIN_UP_BANK_KEY_NAME));
-    int64_t min_up_amount_value = strtoull(min_up_amount.value.c_str(), NULL, 0);
+    int64_t min_up_amount_value = get_settings_value(finger_official,MIN_UP_BANK_KEY_NAME);
     asset min_up_asset = asset(min_up_amount_value, EOS_SYMBOL);
 
-
-    bankbulls::global_state min_increase_amount = models::global_state::find(finger_official,
-                                                                             name(MIN_INCREASE_KEY_NAME));
-    int64_t min_increase_amount_value = strtoull(min_increase_amount.value.c_str(), NULL, 0);
+    int64_t min_increase_amount_value = get_settings_value(finger_official,MIN_INCREASE_KEY_NAME);
     asset min_increase_asset = asset(min_increase_amount_value, EOS_SYMBOL);
 
-    bankbulls::global_state min_reduce_amount = models::global_state::find(finger_official, name(MIN_REDUCE_KEY_NAME));
-    int64_t min_reduce_amount_value = strtoull(min_reduce_amount.value.c_str(), NULL, 0);
+    int64_t min_reduce_amount_value = get_settings_value(finger_official,MIN_REDUCE_KEY_NAME);
     asset min_reduce_asset = asset(min_reduce_amount_value, EOS_SYMBOL);
 
 
@@ -545,9 +547,7 @@ void bankbulls::resbank(name account, asset investment, uint64_t action) {
         }
 
         case reduce_banker_action: {
-            bankbulls::global_state limit_system_bank = models::global_state::find(finger_official,
-                                                                                   name(LIMIT_SYSTEM_BANK_KEY_NAME));
-            uint64_t limit_system_bank_amount = strtoull(limit_system_bank.value.c_str(), NULL, 0);
+            uint64_t limit_system_bank_amount = get_settings_value(finger_official,LIMIT_SYSTEM_BANK_KEY_NAME);
 
             bankbulls::up_bankers banker = models::up_bankers::find(finger_official, account);
             int64_t remained_investment =
@@ -587,8 +587,9 @@ void bankbulls::resbank(name account, asset investment, uint64_t action) {
 void bankbulls::cancelgame() {
     name finger_official = get_self();
     require_auth(finger_official);
-    //uint64_t last_id = models::game::get_last_id(finger_official);
+    int64_t  settlement_size = get_settings_value(finger_official,SETTLEMENT_SIZE_KEY_NAME);
     vector<bankbulls::game> games = models::game::list_by_created(finger_official);
+    check(games.size() > 0,"Any game have n't start ?");
     //todo:待join确认
     //fixme:只有state小于3的才流局，其他的直接走正常流程
     check(games[0].state <= 2, "game have opend card,can't cancel");
@@ -610,13 +611,14 @@ void bankbulls::cancelgame() {
         itr++;
     }
     //
-    delay_call_action(finger_official, finger_official, name("sltgame"), std::make_tuple(20, last_id), 1, SLT_GAME_SID);
+    delay_call_action(finger_official, finger_official, name("sltgame"), std::make_tuple(settlement_size, last_id), 1, SLT_GAME_SID);
 }
 
 void bankbulls::cancelround() {
     name finger_official = get_self();
     require_auth(finger_official);
     vector<bankbulls::cur_round> cur_rounds = models::cur_round::list_by_created(finger_official);
+    check(cur_rounds.size() != 0, "have no round at now?");
     uint64_t last_id = cur_rounds[0].id;
     check(cur_rounds[0].state == ongoing_round_state, "this round is settlementing round,can't cancel");
     //流轮之前先流局
@@ -646,8 +648,7 @@ void bankbulls::testdelayc() {
             txn.delay_sec = i;
             txn.send(i, _self, false);
         }
-        bankbulls::global_state last_logs2_id = models::global_state::find(contract, name(MIN_UP_BANK_KEY_NAME));
-        uint64_t id = strtoull(last_logs2_id.value.c_str(), NULL, 0) + 1;
+        uint64_t id = get_settings_value(contract,MIN_UP_BANK_KEY_NAME);
         models::global_state::update(contract, name(MIN_UP_BANK_KEY_NAME), to_string(id));
     }
     return;
@@ -673,9 +674,7 @@ void bankbulls::testdelayb(int64_t count) {
         );//tuplex
         txn.delay_sec = 10;
         txn.send(i + count * 51, _self, false);
-        //id++;
-        bankbulls::global_state last_logs2_id = models::global_state::find(contract, name(LAST_LOGS2_ID_KEY_NAME));
-        uint64_t id = strtoull(last_logs2_id.value.c_str(), NULL, 0) + 1;
+        uint64_t  id = get_settings_value(contract,LAST_LOGS2_ID_KEY_NAME);
         models::global_state::update(contract, name(LAST_LOGS2_ID_KEY_NAME), to_string(id));
     }
     return;

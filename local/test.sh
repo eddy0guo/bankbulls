@@ -44,8 +44,8 @@ init2() {
   cleos --url http://jungle3.cryptolions.io:80 push action eddytest1114 tableclear '["all"]' -p eddytest1114@active 1>/dev/null
   cleos --url http://jungle3.cryptolions.io:80 push action eddytest1114 setstate '[ "minupbank","5000"]' -p eddytest1114@active
   cleos --url http://jungle3.cryptolions.io:80 push action eddytest1114 setstate '[ "lastlogs2id","0"]' -p eddytest1114@active 1>/dev/null
-  cleos --url http://jungle3.cryptolions.io:80 push action eosio.token transfer '["eddytest1111","eddytest1114","50.6200 EOS","resbank|eddytest1111|3.12|1"]' -p eddytest1111@active 1>/dev/null
-  cleos --url http://jungle3.cryptolions.io:80 push action eosio.token transfer '["eddytest1112","eddytest1114","100.1200 EOS","resbank|eddytest1112|1.12|1"]' -p eddytest1112@active 1>/dev/null
+  cleos --url http://jungle3.cryptolions.io:80 push action eosio.token transfer '["eddytest1111","eddytest1114","5.6200 EOS","resbank|eddytest1111|3.12|1"]' -p eddytest1111@active 1>/dev/null
+  cleos --url http://jungle3.cryptolions.io:80 push action eosio.token transfer '["eddytest1112","eddytest1114","10.1200 EOS","resbank|eddytest1112|1.12|1"]' -p eddytest1112@active 1>/dev/null
 }
 cancel_game() {
   cleos --url http://jungle3.cryptolions.io:80 push action eddytest1114 startround '[]' -p eddytest1114@active 1>/dev/null
@@ -57,7 +57,7 @@ cancel_game() {
   cleos --url http://jungle3.cryptolions.io:80 push action eosio.token transfer '["eddytest1115","eddytest1114","3.0000 EOS","bet|1|eddytest1115|1.0000\ EOS|0.4000\ EOS|0.3000\ EOS|0.2000\ EOS|0.1000\ EOS|SIG_K1_KjwqmE98ZPvEjFPw2MnrTHqrbmeXgMgFsBcNcttPHwZWR1kPemafWKkXQc1yZecq6bHdTAWtvpBC3X5u6Ggh2x9i1PvrKe"]' -p eddytest1115@active
   ###cleos --url http://jungle3.cryptolions.io:80 push action eddytest1114 stopbet '[]' -p eddytest1114@active
   sleep 25
-  cleos --url http://jungle3.cryptolions.io:80 push action eddytest1114 opencards '[ "SIG_K1_KjwqmE98ZPvEjFPw2MnrTHqrbmeXgMgFsBcNcttPHwZWR1kPemafWKkXQc1yZecq6bHdTAWtvpBC3X5u6Ggh2x9i1PvrKe", "778fea5af7567ecfa776f6a379eeed5103e705588fd9dd3ed15e118899358479","10000","06494dc1b567337bcb8bce2aef584494e1f43cf0e83e69177c8c154133608281" ]' -p eddytest1114@active
+  ##cleos --url http://jungle3.cryptolions.io:80 push action eddytest1114 opencards '[ "SIG_K1_KjwqmE98ZPvEjFPw2MnrTHqrbmeXgMgFsBcNcttPHwZWR1kPemafWKkXQc1yZecq6bHdTAWtvpBC3X5u6Ggh2x9i1PvrKe", "778fea5af7567ecfa776f6a379eeed5103e705588fd9dd3ed15e118899358479","10000","06494dc1b567337bcb8bce2aef584494e1f43cf0e83e69177c8c154133608281" ]' -p eddytest1114@active
   echo "records account info before test cancel game"
   cleos --url http://jungle3.cryptolions.io:80 get account eddytest1114 | grep liquid
   cleos --url http://jungle3.cryptolions.io:80 get account eddytest1113 | grep liquid
@@ -86,15 +86,15 @@ res_down_banker() {
   cleos --url http://jungle3.cryptolions.io:80 get account eddytest1111 | grep liquid
   cleos --url http://jungle3.cryptolions.io:80 get table eddytest1114 eddytest1114 logs
   cleos --url http://jungle3.cryptolions.io:80 get table eddytest1114 eddytest1114 logs2
-  cleos --url http://jungle3.cryptolions.io:80 push action eddytest1114 sltgame '["2","1"]' -p eddytest1114@active 1>/dev/null
+  #cleos --url http://jungle3.cryptolions.io:80 push action eddytest1114 sltgame '["2","1"]' -p eddytest1114@active 1>/dev/null
   cleos --url http://jungle3.cryptolions.io:80 get account eddytest1111 | grep liquid
   cleos --url http://jungle3.cryptolions.io:80 get table eddytest1114 eddytest1114 upbankers
 
   cleos --url http://jungle3.cryptolions.io:80 push action eddytest1114 resbank '["eddytest1112", "100.0000 EOS", "2"]' -p eddytest1112@active 1>/dev/null
   cleos --url http://jungle3.cryptolions.io:80 push action eddytest1114 resbank '["eddytest1111", "100.0000 EOS", "2"]' -p eddytest1111@active 1>/dev/null
-  cleos --url http://jungle3.cryptolions.io:80 push action eddytest1114 startround '[]' -p eddytest1114@active 1>/dev/null
+  #cleos --url http://jungle3.cryptolions.io:80 push action eddytest1114 startround '[]' -p eddytest1114@active 1>/dev/null
   cleos --url http://jungle3.cryptolions.io:80 get table eddytest1114 eddytest1114 upbankers
-  cleos --url http://jungle3.cryptolions.io:80 push action eddytest1114 sltround '["2","1"]' -p eddytest1114@active
+  #cleos --url http://jungle3.cryptolions.io:80 push action eddytest1114 sltround '["2","1"]' -p eddytest1114@active
 
   cleos --url http://jungle3.cryptolions.io:80 get table eddytest1114 eddytest1114 logs2
   cleos --url http://jungle3.cryptolions.io:80 get table eddytest1114 eddytest1114 logs
@@ -167,13 +167,6 @@ complete_game_once() {
   cleos --url http://jungle3.cryptolions.io:80 push action eddytest1114 opencards '[ "SIG_K1_KjwqmE98ZPvEjFPw2MnrTHqrbmeXgMgFsBcNcttPHwZWR1kPemafWKkXQc1yZecq6bHdTAWtvpBC3X5u6Ggh2x9i1PvrKe", "778fea5af7567ecfa776f6a379eeed5103e705588fd9dd3ed15e118899358479","10000","06494dc1b567337bcb8bce2aef584494e1f43cf0e83e69177c8c154133608281" ]' -p eddytest1114@active 1>/dev/null
 }
 
-while(1){
-  startbet
-  sleep25
-  opencard  2:00
-  sleep16   2::16
-}
-
 complete_game_once2() {
   current_id=$1
   echo "  complete_game_once current_id=  "$current_id
@@ -225,14 +218,15 @@ cancel_game)
   ;;
 ##测试下庄之后，轮次结算
 res_down_banker)
-  init
-  complete_game_once
+  init2
+  cleos --url http://jungle3.cryptolions.io:80 push action eddytest1114 startround '[]' -p eddytest1114@active 1>/dev/null
+  complete_game_once2 1
   res_down_banker
   ;;
 ##测试下庄之后，轮次结算
 res_reduce_banker)
-  init
-  complete_game_once
+  init2
+  complete_game_once2
   res_down_banker
   ;;
 complete_game_once)

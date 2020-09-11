@@ -164,6 +164,11 @@
             ]
         },
         {
+            "name": "delayclear",
+            "base": "",
+            "fields": []
+        },
+        {
             "name": "delstate",
             "base": "",
             "fields": [
@@ -654,10 +659,6 @@
                 {
                     "name": "dispose_count",
                     "type": "int32"
-                },
-                {
-                    "name": "count",
-                    "type": "uint32"
                 }
             ]
         },
@@ -803,6 +804,11 @@
         {
             "name": "canceltrx",
             "type": "canceltrx",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "delayclear",
+            "type": "delayclear",
             "ricardian_contract": ""
         },
         {

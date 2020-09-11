@@ -41,6 +41,10 @@ void finger_transfer(const name from, const name to, string token_contract_name,
            std::make_tuple(from, to, asset(amount, current_symbol), std::string(memo)))
             .send();
 }
+uint64_t get_settings_value(name contract,string key){
+    bankbulls::global_state min_down_bank = models::global_state::find(contract, name(key));
+    return strtoull(min_down_bank.value.c_str(), NULL, 0);
+}
 
 eosio::checksum256 get_current_hash() {
     auto size = transaction_size();
@@ -789,9 +793,7 @@ bool update_up_banker_and_settlement(name contract) {
                         //check(next_investment_amount > 0, "next investment amount must be more than zero");
                         asset next_investment = asset(next_investment_amount, EOS_SYMBOL);
                         //减仓生效后若余额低于50EOS将自动下庄。
-                        bankbulls::global_state limit_system_bank = models::global_state::find(contract,
-                                                                                               name(LIMIT_SYSTEM_BANK_KEY_NAME));
-                        uint64_t limit_system_bank_amount = strtoull(limit_system_bank.value.c_str(), NULL, 0);
+                        uint64_t limit_system_bank_amount = get_settings_value(contract,LIMIT_SYSTEM_BANK_KEY_NAME);
 
                         if (next_investment_amount >= limit_system_bank_amount) {
                             models::up_bankers::update(contract, res_banker_list[i].account,
@@ -834,8 +836,7 @@ bool update_up_banker_and_settlement(name contract) {
     }
     printf(" *d* ");
     //小于阀值，系统以所有金额补庄
-    bankbulls::global_state limit_system_bank = models::global_state::find(contract, name(LIMIT_SYSTEM_BANK_KEY_NAME));
-    uint64_t limit_system_bank_amount = strtoull(limit_system_bank.value.c_str(), NULL, 0);
+    uint64_t limit_system_bank_amount = get_settings_value(contract,LIMIT_SYSTEM_BANK_KEY_NAME);
     if (sum_investment < 20 * limit_system_bank_amount) {
         asset balance = asset(get_account_balance(contract), EOS_SYMBOL);
         models::up_bankers::insert(contract, contract, balance, balance, asset(0, EOS_SYMBOL), 0, 0, 0, 0, 1,
@@ -903,8 +904,7 @@ void update_cur_round(name contract, uint64_t last_round_id) {
     system_banker_max_bet_asset.amount = system_investment.amount * 15 / 1000;
 
     string cur_max_limit = player_investment.amount == 0 ? LIMIT_SYSTEM_BANK_KEY_NAME : LIMIT_PLAY_BANK_KEY_NAME;
-    bankbulls::global_state limit_setting = models::global_state::find(contract, name(cur_max_limit));
-    uint64_t limit_setting_amount = strtoull(limit_setting.value.c_str(), NULL, 0);
+    uint64_t limit_setting_amount = get_settings_value(contract,cur_max_limit);
     asset cur_max_asset = asset(limit_setting_amount, EOS_SYMBOL);
 
     models::cur_round::insert(contract, last_round_id + 1, last_game_id, player_investment,
@@ -977,8 +977,7 @@ void system_join_bankers(name contract) {
     //asset cur_max_bet;                    //单人投注最大额
     // uint32_t banker_num;                    //上庄总人数
     //        asset system_investment;            //系统投资额
-    bankbulls::global_state max_bet = models::global_state::find(contract, name(LIMIT_PLAY_BANK_KEY_NAME));
-    uint64_t max_bet_amt = strtoull(max_bet.value.c_str(), NULL, 0);
+    uint64_t max_bet_amt = get_settings_value(contract,LIMIT_PLAY_BANK_KEY_NAME);
     asset max_bet_asset = asset(max_bet_amt, EOS_SYMBOL);
 
     models::cur_round::update(contract, cur_round[0].id, max_bet_asset, cur_round[0].banker_num + 1, sys_balance_asset);

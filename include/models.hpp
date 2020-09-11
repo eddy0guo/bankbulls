@@ -142,7 +142,14 @@ namespace models {
             return true;
         }
 
-        static bool remove() {
+        static bool remove(name contract,uint64_t id) {
+            bankbulls::game_index game_table(contract, contract.value);
+
+            auto itr = game_table.find(id);
+            if (itr == game_table.end()) {
+                check(false, "27.5 game id not found");
+            }
+            game_table.erase(itr);
             return true;
         }
 

@@ -659,10 +659,6 @@
                 {
                     "name": "dispose_count",
                     "type": "int32"
-                },
-                {
-                    "name": "count",
-                    "type": "uint32"
                 }
             ]
         },
